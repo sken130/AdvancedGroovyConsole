@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package com.kenlam.groovyconsole
 
@@ -72,10 +75,11 @@ import javax.swing.event.DocumentListener
  * @author Hamlet D'Arcy, AST browser
  * @author Roshan Dawrani
  * @author Paul King
+ * @author Andre Steingress
  */
 class AdvancedGroovyConsole extends Console {
 
-    static final String DEFAULT_SCRIPT_NAME_START = "ConsoleScript"
+    static final String DEFAULT_SCRIPT_NAME_START = 'ConsoleScript'
 
     static private prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
 
@@ -85,7 +89,7 @@ class AdvancedGroovyConsole extends Console {
     static consoleControllers = []
 
     boolean fullStackTraces = prefs.getBoolean('fullStackTraces',
-        Boolean.valueOf(System.getProperty("groovy.full.stacktrace", "false")))
+        Boolean.valueOf(System.getProperty('groovy.full.stacktrace', 'false')))
     Action fullStackTracesAction
 
     boolean showScriptInOutput = prefs.getBoolean('showScriptInOutput', true)
@@ -117,6 +121,12 @@ class AdvancedGroovyConsole extends Console {
     // Safer thread interruption
     boolean threadInterrupt = prefs.getBoolean('threadInterrupt', false)
     Action threadInterruptAction
+
+    boolean saveOnRun = prefs.getBoolean('saveOnRun', false)
+    Action saveOnRunAction
+
+    //to allow loading classes dynamically when using @Grab (GROOVY-4877, GROOVY-5871)
+    boolean useScriptClassLoaderForScriptExecution = false
 
     // Maximum size of history
     int maxHistory = 10
@@ -151,7 +161,7 @@ class AdvancedGroovyConsole extends Console {
     // Internal history
     List history = []
     int historyIndex = 1 // valid values are 0..history.length()
-    HistoryRecord pendingRecord = new HistoryRecord( allText: "", selectionStart: 0, selectionEnd: 0)
+    HistoryRecord pendingRecord = new HistoryRecord( allText: '', selectionStart: 0, selectionEnd: 0)
     Action prevHistoryAction
     Action nextHistoryAction
 
@@ -192,13 +202,14 @@ options:
             return
         }
 
-        // allow the full stack traces to bubble up to the root logger
-        java.util.logging.Logger.getLogger(StackTraceUtils.STACK_LOG_NAME).useParentHandlers = true
+        // full stack trace should not be logged to the output window - GROOVY-4663
+        java.util.logging.Logger.getLogger(StackTraceUtils.STACK_LOG_NAME).useParentHandlers = false
 
         //when starting via main set the look and feel to system
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 
         def console = new AdvancedGroovyConsole(AdvancedGroovyConsole.class.classLoader?.getRootLoader())
+        console.useScriptClassLoaderForScriptExecution = true
         console.run()
         if (args.length == 1) console.loadScriptFile(args[0] as File)
     }
@@ -218,8 +229,9 @@ options:
     AdvancedGroovyConsole(ClassLoader parent, Binding binding) {
         newScript(parent, binding);
         try {
-            System.setProperty("groovy.full.stacktrace", System.getProperty("groovy.full.stacktrace",
+            System.setProperty('groovy.full.stacktrace', System.getProperty('groovy.full.stacktrace',
                     Boolean.toString(prefs.getBoolean('fullStackTraces', false))))
+
         } catch (SecurityException se) {
             fullStackTracesAction.enabled = false;
         }
@@ -243,12 +255,12 @@ options:
         shell = new GroovyShell(parent, binding, config)
     }
 
-    static def frameConsoleDelegates = [
+    static frameConsoleDelegates = [
             rootContainerDelegate:{
                 frame(
                     title: 'GroovyConsole',
                     //location: [100,100], // in groovy 2.0 use platform default location
-                    iconImage: imageIcon("/groovy/ui/ConsoleIcon.png").image,
+                    iconImage: imageIcon('/groovy/ui/ConsoleIcon.png').image,
                     defaultCloseOperation: JFrame.DO_NOTHING_ON_CLOSE,
                 ) {
                     try {
@@ -283,6 +295,16 @@ options:
         swing = new SwingBuilder()
         defaults.each{k, v -> swing[k] = v}
 
+        // tweak what the stack traces filter out to be fairly broad
+        System.setProperty('groovy.sanitized.stacktraces', '''org.codehaus.groovy.runtime.
+                org.codehaus.groovy.
+                groovy.lang.
+                gjdk.groovy.lang.
+                sun.
+                java.lang.reflect.
+                java.lang.Thread''')
+
+
         // add controller to the swingBuilder bindings
         swing.controller = this
 
@@ -314,7 +336,7 @@ options:
      * @param frame the application window
      */
     private void nativeFullScreenForMac(java.awt.Window frame) {
-        if (System.getProperty("os.name").contains("Mac OS X")) {
+        if (System.getProperty('os.name').contains('Mac OS X')) {
             new GroovyShell(new Binding([frame: frame])).evaluate('''
                     try {
                         com.apple.eawt.FullScreenUtilities.setWindowCanFullScreen(frame, true)
@@ -371,14 +393,14 @@ options:
 
     void appendOutput(Component component, AttributeSet style) {
         SimpleAttributeSet sas = new SimpleAttributeSet();
-        sas.addAttribute(StyleConstants.NameAttribute, "component")
+        sas.addAttribute(StyleConstants.NameAttribute, 'component')
         StyleConstants.setComponent(sas, component)
         appendOutput(component.toString(), sas)
     }
 
     void appendOutput(Icon icon, AttributeSet style) {
         SimpleAttributeSet sas = new SimpleAttributeSet();
-        sas.addAttribute(StyleConstants.NameAttribute, "icon")
+        sas.addAttribute(StyleConstants.NameAttribute, 'icon')
         StyleConstants.setIcon(sas, icon)
         appendOutput(icon.toString(), sas)
     }
@@ -399,7 +421,7 @@ options:
             int initialLength = doc.length
 
             def matcher = line =~ stacktracePattern
-            def fileName =  matcher.matches() ? matcher[0][-5] : ""
+            def fileName =  matcher.matches() ? matcher[0][-5] : ''
 
             if (fileName == scriptFile?.name || fileName.startsWith(DEFAULT_SCRIPT_NAME_START)) {
                 def fileNameAndLineNumber = matcher[0][-6]
@@ -409,7 +431,7 @@ options:
                 def style = hyperlinkStyle
                 def hrefAttr = new SimpleAttributeSet()
                 // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
-                hrefAttr.addAttribute(HTML.Attribute.HREF, "file://" + fileNameAndLineNumber)
+                hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + fileNameAndLineNumber)
                 style.addAttribute(HTML.Tag.A, hrefAttr);
 
                 doc.insertString(initialLength,                     line[0..<index],                    stacktraceStyle)
@@ -427,8 +449,8 @@ options:
     void appendOutputNl(text, style) {
         def doc = outputArea.styledDocument
         def len = doc.length
-        def alreadyNewLine = (len == 0 || doc.getText(len - 1, 1) == "\n")
-        doc.insertString(doc.length, " \n", style)
+        def alreadyNewLine = (len == 0 || doc.getText(len - 1, 1) == '\n')
+        doc.insertString(doc.length, ' \n', style)
         if (alreadyNewLine) {
             doc.remove(len, 2) // windows hack to fix (improve?) line spacing
         }
@@ -439,18 +461,18 @@ options:
         appendOutput(text, style)
         def doc = outputArea.styledDocument
         def len = doc.length
-        doc.insertString(len, " \n", style)
+        doc.insertString(len, ' \n', style)
         doc.remove(len, 2) // windows hack to fix (improve?) line spacing
     }
 
     // Return false if use elected to cancel
     boolean askToSaveFile() {
-        if (scriptFile == null || !dirty) {
+        if (!dirty) {
             return true
         }
         switch (JOptionPane.showConfirmDialog(frame,
-            "Save changes to " + scriptFile.name + "?",
-            "GroovyConsole", JOptionPane.YES_NO_CANCEL_OPTION))
+            'Save changes' + (scriptFile != null ? " to ${scriptFile.name}" : '') + '?',
+            'GroovyConsole', JOptionPane.YES_NO_CANCEL_OPTION))
         {
             case JOptionPane.YES_OPTION:
                 return fileSave()
@@ -465,10 +487,10 @@ options:
         Toolkit.defaultToolkit.beep()
     }
 
-    // Binds the "_" and "__" variables in the shell
+    // Binds the '_' and '__' variables in the shell
     void bindResults() {
-        shell.setVariable("_", getLastResult()) // lastResult doesn't seem to work
-        shell.setVariable("__", history.collect {it.result})
+        shell.setVariable('_', getLastResult()) // lastResult doesn't seem to work
+        shell.setVariable('__', history.collect {it.result})
     }
 
     // Handles menu event
@@ -484,7 +506,7 @@ options:
     
     void fullStackTraces(EventObject evt) {
         fullStackTraces = evt.source.selected
-        System.setProperty("groovy.full.stacktrace",
+        System.setProperty('groovy.full.stacktrace',
             Boolean.toString(fullStackTraces))
         prefs.putBoolean('fullStackTraces', fullStackTraces)
     }
@@ -556,7 +578,7 @@ options:
     def askToInterruptScript() {
         if(!scriptRunning) return true
         def rc = JOptionPane.showConfirmDialog(frame, "Script executing. Press 'OK' to attempt to interrupt it before exiting.",
-            "GroovyConsole", JOptionPane.OK_CANCEL_OPTION)
+            'GroovyConsole', JOptionPane.OK_CANCEL_OPTION)
         if (rc == JOptionPane.OK_OPTION) {
             doInterrupt()
             return true
@@ -616,9 +638,11 @@ options:
     }
 
     void fileOpen(EventObject evt = null) {
-        def scriptName = selectFilename()
-        if (scriptName != null) {
-            loadScriptFile(scriptName)
+        if (askToSaveFile()) {
+            def scriptName = selectFilename()
+            if (scriptName != null) {
+                loadScriptFile(scriptName)
+            }
         }
     }
 
@@ -653,16 +677,16 @@ options:
     boolean fileSave(EventObject evt = null) {
         if (scriptFile == null) {
             return fileSaveAs(evt)
-        } else {
-            scriptFile.write(inputArea.text)
-            setDirty(false)
-            return true
         }
+
+        scriptFile.write(inputArea.text)
+        setDirty(false)
+        return true
     }
 
     // Save file - return false if user cancelled save
     boolean fileSaveAs(EventObject evt = null) {
-        scriptFile = selectFilename("Save")
+        scriptFile = selectFilename('Save')
         if (scriptFile != null) {
             scriptFile.write(inputArea.text)
             setDirty(false)
@@ -699,10 +723,10 @@ options:
                     def style = hyperlinkStyle
                     def hrefAttr = new SimpleAttributeSet()
                     // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
-                    hrefAttr.addAttribute(HTML.Attribute.HREF, "file://" + scriptFileName + ":" + errorLine)
+                    hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + scriptFileName + ':' + errorLine)
                     style.addAttribute(HTML.Tag.A, hrefAttr);
 
-                    doc.insertString(doc.length, message + " at ", stacktraceStyle)
+                    doc.insertString(doc.length, message + ' at ', stacktraceStyle)
                     doc.insertString(doc.length, "line: ${se.line}, column: ${se.startColumn}\n\n", style)
                 } else if (error instanceof Throwable) {
                     reportException(error)
@@ -735,7 +759,7 @@ options:
     }
 
     private reportException(Throwable t) {
-        appendOutputNl("Exception thrown\n", commandStyle)
+        appendOutputNl('Exception thrown\n', commandStyle)
 
         StringWriter sw = new StringWriter()
         new PrintWriter(sw).withWriter {pw -> StackTraceUtils.deepSanitize(t).printStackTrace(pw) }
@@ -747,7 +771,7 @@ options:
         history[-1].result = result
         if (result != null) {
             statusLabel.text = 'Execution complete.'
-            appendOutputNl("Result: ", promptStyle)
+            appendOutputNl('Result: ', promptStyle)
             def obj = (visualizeScriptResults
                 ? OutputTransforms.transformResult(result, shell.getContext()._outputTransforms)
                 : result.toString())
@@ -811,8 +835,8 @@ options:
 
     void inspectLast(EventObject evt = null){
         if (null == lastResult) {
-            JOptionPane.showMessageDialog(frame, "The last result is null.",
-                "Cannot Inspect", JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.showMessageDialog(frame, 'The last result is null.',
+                'Cannot Inspect', JOptionPane.INFORMATION_MESSAGE)
             return
         }
         ObjectBrowser.inspect(lastResult)
@@ -869,7 +893,16 @@ options:
     // actually run the script
 
     void runScript(EventObject evt = null) {
-        runScriptImpl(false)
+        if (saveOnRun && scriptFile != null)  {
+            if (fileSave(evt)) runScriptImpl(false)
+        } else {
+            runScriptImpl(false)
+        }
+    }
+
+    void saveOnRun(EventObject evt = null)  {
+        saveOnRun = evt.source.selected
+        prefs.putBoolean('saveOnRun', saveOnRun)
     }
 
     void runSelectedScript(EventObject evt = null) {
@@ -881,7 +914,7 @@ options:
         fc.fileSelectionMode = JFileChooser.FILES_ONLY
         fc.multiSelectionEnabled = true
         fc.acceptAllFileFilterUsed = true
-        if (fc.showDialog(frame, "Add") == JFileChooser.APPROVE_OPTION) {
+        if (fc.showDialog(frame, 'Add') == JFileChooser.APPROVE_OPTION) {
             currentClasspathJarDir = fc.currentDirectory
             Preferences.userNodeForPackage(AdvancedGroovyConsole).put('currentClasspathJarDir', currentClasspathJarDir.path)
             fc.selectedFiles?.each { file ->
@@ -894,7 +927,7 @@ options:
         def fc = new JFileChooser(currentClasspathDir)
         fc.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
         fc.acceptAllFileFilterUsed = true
-        if (fc.showDialog(frame, "Add") == JFileChooser.APPROVE_OPTION) {
+        if (fc.showDialog(frame, 'Add') == JFileChooser.APPROVE_OPTION) {
             currentClasspathDir = fc.currentDirectory
             Preferences.userNodeForPackage(AdvancedGroovyConsole).put('currentClasspathDir', currentClasspathDir.path)
             shell.getClassLoader().addURL(fc.selectedFile.toURL())
@@ -922,15 +955,15 @@ options:
         addToHistory(record)
         pendingRecord = new HistoryRecord(allText:'', selectionStart:0, selectionEnd:0)
 
-        if (prefs.getBoolean("autoClearOutput", false)) clearOutput()
+        if (prefs.getBoolean('autoClearOutput', false)) clearOutput()
 
         // Print the input text
         if (showScriptInOutput) {
-            for (line in record.getTextToRun(selected).tokenize("\n")) {
+            for (line in record.getTextToRun(selected).tokenize('\n')) {
                 appendOutputNl('groovy> ', promptStyle)
                 appendOutput(line, commandStyle)
             }
-            appendOutputNl(" \n", promptStyle)
+            appendOutputNl(' \n', promptStyle)
         }
 
         // Kick off a new thread to do the evaluation
@@ -942,7 +975,20 @@ options:
                 if(beforeExecution) {
                     beforeExecution()
                 }
-                def result = shell.run(record.getTextToRun(selected), name, [])
+                def result
+                if(useScriptClassLoaderForScriptExecution) {
+                    ClassLoader savedThreadContextClassLoader = Thread.currentThread().contextClassLoader
+                    try {
+                        Thread.currentThread().contextClassLoader = shell.classLoader
+                        result = shell.run(record.getTextToRun(selected), name, [])
+                    }
+                    finally {
+                        Thread.currentThread().contextClassLoader = savedThreadContextClassLoader
+                    }
+                }
+                else {
+                    result = shell.run(record.getTextToRun(selected), name, [])
+                }
                 if(afterExecution) {
                     afterExecution()
                 }
@@ -972,15 +1018,15 @@ options:
         def record = new HistoryRecord( allText: inputArea.getText().replaceAll(endLine, '\n'),
             selectionStart: textSelectionStart, selectionEnd: textSelectionEnd)
 
-        if (prefs.getBoolean("autoClearOutput", false)) clearOutput()
+        if (prefs.getBoolean('autoClearOutput', false)) clearOutput()
 
         // Print the input text
         if (showScriptInOutput) {
-            for (line in record.allText.tokenize("\n")) {
+            for (line in record.allText.tokenize('\n')) {
                 appendOutputNl('groovy> ', promptStyle)
                 appendOutput(line, commandStyle)
             }
-            appendOutputNl(" \n", promptStyle)
+            appendOutputNl(' \n', promptStyle)
         }
 
         // Kick off a new thread to do the compilation
@@ -998,13 +1044,13 @@ options:
         }
     }
     
-    def selectFilename(name = "Open") {
+    def selectFilename(name = 'Open') {
         def fc = new JFileChooser(currentFileChooserDir)
         fc.fileSelectionMode = JFileChooser.FILES_ONLY
         fc.acceptAllFileFilterUsed = true
         fc.fileFilter = groovyFileFilter
-        if(name == "Save") {
-            fc.selectedFile = new File("*.groovy")
+        if(name == 'Save') {
+            fc.selectedFile = new File('*.groovy')
         }
         if (fc.showDialog(frame, name) == JFileChooser.APPROVE_OPTION) {
             currentFileChooserDir = fc.currentDirectory
@@ -1059,7 +1105,7 @@ options:
         def version = GroovySystem.getVersion()
         def pane = swing.optionPane()
          // work around GROOVY-1048
-        pane.setMessage('Welcome to the AdvancedGroovyConsole for evaluating Groovy scripts\nVersion ' + version)
+        pane.setMessage('Welcome to the Advanced Groovy Console for evaluating Groovy scripts\nVersion ' + version)
         def dialog = pane.createDialog(frame, 'About GroovyConsole')
         dialog.show()
     }
@@ -1082,6 +1128,48 @@ options:
 
     void replace(EventObject evt = null) {
         FindReplaceUtility.showDialog(true)
+    }
+    
+    void comment(EventObject evt = null) {
+	def rootElement = inputArea.document.defaultRootElement
+	def cursorPos = inputArea.getCaretPosition()
+	int startRow = rootElement.getElementIndex(cursorPos)
+	int endRow = startRow
+	
+	if (inputArea.getSelectedText()) {
+	    def selectionStart = inputArea.getSelectionStart()
+	    startRow = rootElement.getElementIndex(selectionStart)
+	    def selectionEnd = inputArea.getSelectionEnd()
+	    endRow = rootElement.getElementIndex(selectionEnd)
+	}
+	
+	// If multiple commented lines intermix with uncommented lines, consider them uncommented 
+	def allCommented = true
+	startRow.upto(endRow) { rowIndex ->
+	    def rowElement = rootElement.getElement(rowIndex)
+	    int startOffset = rowElement.getStartOffset()
+	    int endOffset = rowElement.getEndOffset()
+	    String rowText = inputArea.document.getText(startOffset, endOffset - startOffset)
+	    if (rowText.trim().length() < 2 || !rowText.trim().substring(0, 2).equals("//")) {
+	    	allCommented = false
+	    }
+	}
+	
+	startRow.upto(endRow) { rowIndex ->
+	    def rowElement = rootElement.getElement(rowIndex)
+	    int startOffset = rowElement.getStartOffset()
+	    int endOffset = rowElement.getEndOffset()
+	    String rowText = inputArea.document.getText(startOffset, endOffset - startOffset)
+	    if (allCommented) {
+		// Uncomment this line if it is already commented
+		int slashOffset = rowText.indexOf("//")
+		inputArea.document.remove(slashOffset + startOffset, 2)
+	    } else {
+	    	// Add comment string in front of this line
+	    	inputArea.document.insertString(startOffset, "//", new SimpleAttributeSet())
+	    }
+	}
+	
     }
 
     void showMessage(String message) {
@@ -1122,9 +1210,9 @@ options:
     void updateTitle() {
         if (frame.properties.containsKey('title')) {
             if (scriptFile != null) {
-                frame.title = scriptFile.name + (dirty?" * ":"") + " - GroovyConsole"
+                frame.title = scriptFile.name + (dirty?' * ':'') + ' - GroovyConsole'
             } else {
-                frame.title = "GroovyConsole"
+                frame.title = 'GroovyConsole'
             }
         }
     }
@@ -1136,7 +1224,7 @@ options:
             newFontSize = 4
         }
         
-        prefs.putInt("fontSize", newFontSize)
+        prefs.putInt('fontSize', newFontSize)
 
         // don't worry, the fonts won't be changed to this family, the styles will only derive from this
         def newFont = new Font(inputEditor.defaultFamily, Font.PLAIN, newFontSize)
