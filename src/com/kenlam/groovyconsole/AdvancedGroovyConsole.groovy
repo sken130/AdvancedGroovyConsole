@@ -192,8 +192,12 @@ class AdvancedGroovyConsole extends Console {
     boolean scriptRunning = false
     boolean stackOverFlowError = false
     Action interruptAction
+	
+	static final String DEFAULT_SANITIZED_STACKTRACES = 'NotGoingToSanitizeAnything'
     
     static void main(args) {
+		System.setProperty('groovy.sanitized.stacktraces', DEFAULT_SANITIZED_STACKTRACES)
+		
         if (args.length == 1 && args[0] == '--help') {
             println '''usage: groovyConsole [options] [filename]
 options:
@@ -295,15 +299,8 @@ options:
         swing = new SwingBuilder()
         defaults.each{k, v -> swing[k] = v}
 
-        // tweak what the stack traces filter out to be fairly broad
-        System.setProperty('groovy.sanitized.stacktraces', '''org.codehaus.groovy.runtime.
-                org.codehaus.groovy.
-                groovy.lang.
-                gjdk.groovy.lang.
-                sun.
-                java.lang.reflect.
-                java.lang.Thread''')
-
+		// tweak what the stack traces filter out to be fairly broad
+        System.setProperty('groovy.sanitized.stacktraces', DEFAULT_SANITIZED_STACKTRACES)
 
         // add controller to the swingBuilder bindings
         swing.controller = this
