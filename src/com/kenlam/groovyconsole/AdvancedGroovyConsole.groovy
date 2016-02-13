@@ -306,7 +306,7 @@ options:
         swing.controller = this
 
         // create the actions
-        swing.build(ConsoleActions)
+        swing.build(AdvancedGroovyConsoleActions)
 
         // create the view
         swing.build(ConsoleView)
@@ -625,7 +625,7 @@ options:
         consoleController.swing = swing 
         frameConsoleDelegates.each {k, v -> swing[k] = v}
         swing.controller = consoleController
-        swing.build(ConsoleActions)
+        swing.build(AdvancedGroovyConsoleActions)
         swing.build(ConsoleView)
         installInterceptor()
         nativeFullScreenForMac(swing.consoleFrame)
