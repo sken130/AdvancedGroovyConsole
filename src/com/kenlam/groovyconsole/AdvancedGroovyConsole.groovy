@@ -309,7 +309,7 @@ options:
         swing.build(AdvancedGroovyConsoleActions)
 
         // create the view
-        swing.build(ConsoleView)
+        swing.build(AdvancedGroovyConsoleView)
 
         bindResults()
 
@@ -626,7 +626,7 @@ options:
         frameConsoleDelegates.each {k, v -> swing[k] = v}
         swing.controller = consoleController
         swing.build(AdvancedGroovyConsoleActions)
-        swing.build(ConsoleView)
+        swing.build(AdvancedGroovyConsoleView)
         installInterceptor()
         nativeFullScreenForMac(swing.consoleFrame)
         swing.consoleFrame.pack()
