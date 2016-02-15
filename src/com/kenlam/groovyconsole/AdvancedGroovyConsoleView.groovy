@@ -33,6 +33,7 @@ switch (UIManager.getSystemLookAndFeelClassName()) {
     case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
     case 'com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel':
         build(WindowsDefaults)
+		menuBarClass = AdvancedGroovyConsoleMenuBar
         break
 
     case 'apple.laf.AquaLookAndFeel':
