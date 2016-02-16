@@ -52,6 +52,8 @@ switch (UIManager.getSystemLookAndFeelClassName()) {
 
 binding.rootContainerDelegate.delegate = this
 
+contentPaneClass = AdvancedGroovyConsoleContentPane
+
 consoleFrame = binding['rootContainerDelegate']()
 container(consoleFrame) {
 
