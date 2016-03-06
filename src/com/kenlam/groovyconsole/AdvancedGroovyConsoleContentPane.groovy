@@ -47,7 +47,7 @@ import javax.swing.text.StyleConstants
 import javax.swing.WindowConstants
 import javax.swing.JSplitPane
 
-def prefs = Preferences.userNodeForPackage(Console)
+def prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
 def detachedOutputFlag = prefs.getBoolean('detachedOutput', false)
 outputWindow = frame(visible:false, defaultCloseOperation: WindowConstants.HIDE_ON_CLOSE) {
     blank = glue()
