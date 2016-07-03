@@ -46,7 +46,7 @@ import javax.swing.event.DocumentListener
 switch (UIManager.getSystemLookAndFeelClassName()) {
     case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
     case 'com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel':
-        build(WindowsDefaults)
+        build(ViewWindowsDefaults)
 		menuBarClass = AdvancedGroovyConsoleMenuBar
         break
 
@@ -60,7 +60,7 @@ switch (UIManager.getSystemLookAndFeelClassName()) {
         break
 
     default:
-        build(Defaults)
+        build(ViewDefaults)
         break
 }
 
