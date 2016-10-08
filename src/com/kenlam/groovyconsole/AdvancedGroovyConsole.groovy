@@ -207,6 +207,8 @@ class AdvancedGroovyConsole extends Console {
     boolean stackOverFlowError = false
     Action interruptAction
 	
+	static final File LOG_FILE = new File("logs/templog.txt")
+	
 	static final String DEFAULT_SANITIZED_STACKTRACES = 'NotGoingToSanitizeAnything'
     
     static void main(args) {
@@ -230,6 +232,8 @@ options:
         console.useScriptClassLoaderForScriptExecution = true
         console.run()
         if (args.length == 1) console.loadScriptFile(args[0] as File)
+		
+		initLogFile()
     }
 
     AdvancedGroovyConsole() {
@@ -864,6 +868,16 @@ options:
     void largerFont(EventObject evt = null) {
         updateFontSize(inputArea.font.size + 2)
     }
+	
+	static void initLogFile() {
+		LOG_FILE.getParentFile().mkdirs()
+	}
+	static void writeStringToLogFile(String string) {
+		LOG_FILE.newWriter("utf-8", true).withWriter{ selfWriter ->
+			selfWriter.write(string)
+			selfWriter.write("\n")
+		}
+	}
 
     static boolean notifySystemOut(String str) {
         if (!captureStdOut) {
