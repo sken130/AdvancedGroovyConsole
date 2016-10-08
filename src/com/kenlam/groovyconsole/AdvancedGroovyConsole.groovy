@@ -880,7 +880,7 @@ options:
                 consoleControllers.each {it.appendOutputLines(str, it.outputStyle)}
             }
         }
-        return false
+        return true
     }
 
     static boolean notifySystemErr(String str) {
@@ -898,7 +898,7 @@ options:
                 consoleControllers.each {it.appendStacktrace(str)}
             }
         }
-        return false
+        return true
     }
 
     // actually run the script
