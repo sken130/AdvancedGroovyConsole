@@ -1,0 +1,7 @@
+1. Dirty checking
+2. Categorization of each tab's output
+3. Per tab splitPane & detachedOutput setting
+4. Hide the new window functionality
+5. Load script file
+6. Drag and drop
+7. Fix starting window size problem.

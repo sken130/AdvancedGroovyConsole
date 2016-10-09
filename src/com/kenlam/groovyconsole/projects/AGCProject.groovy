@@ -16,11 +16,95 @@
 
 package com.kenlam.groovyconsole.projects
 
+import com.kenlam.groovyconsole.AdvancedGroovyConsole
+import groovy.ui.ConsoleTextEditor
+
+import java.awt.Component
+import javax.swing.*
+import javax.swing.text.Element
+import javax.swing.text.Style
+
 public class AGCProject {
+	public final AdvancedGroovyConsole consoleApp
+	public JPanel panel
+	
 	public File loadedConfigFile
-	public List<File> groovyScripts
+	public final List<File> groovyScriptFiles = []
+	
+	Component outputWindow
+	Component blank
+	Component scrollArea
+	
+	ConsoleTextEditor inputEditor
+	JSplitPane splitPane
+	JTextPane inputArea
+	JTextPane outputArea
+	
+	JLabel rowNumAndColNum
+	
+	Element rootElement
+	int cursorPos
+    int rowNum
+    int colNum
+	
+	// Styles for output area
+    Style promptStyle
+    Style commandStyle
+    Style outputStyle
+    Style stacktraceStyle
+    Style hyperlinkStyle
+    Style resultStyle
+	
+	// Current editor state
+	boolean dirty
+	int textSelectionStart  // keep track of selections in inputArea
+    int textSelectionEnd
+	
+	public AGCProject(Map params) {
+		this.consoleApp = params.consoleApp
+	}
+	
+	public Action getSaveAction() {
+		return consoleApp.saveAction
+	}
+	
+	public File firstGroovyScriptFile() {
+		return groovyScriptFiles[0]
+	}
 	
 	public boolean isNew() {
 		return !loadedConfigFile
 	}
+	
+	public int getApplicationTabPaneIndex() {
+		assert this.panel != null
+		int idx = consoleApp.projectTabs.indexOfComponent(this.panel)
+		assert idx > -1
+		return idx
+	}
+	
+	void setDirty(boolean newDirty) {
+        //TODO when @BoundProperty is live, this should be handled via listeners
+        dirty = newDirty
+        saveAction.enabled = newDirty
+        updateTitle()
+    }
+	
+	void updateTitle() {
+		File scriptFile = firstGroovyScriptFile()
+		String newTitle = (scriptFile?.name ?: "New Project") + (dirty?' * ':'') + ''
+		consoleApp.projectTabs.setTitleAt(getApplicationTabPaneIndex(), newTitle)
+    }
+	
+	void setRowNumAndColNum() {
+        cursorPos = inputArea.getCaretPosition()
+        rowNum = rootElement.getElementIndex(cursorPos) + 1
+
+        def rowElement = rootElement.getElement(rowNum - 1)
+        colNum = cursorPos - rowElement.getStartOffset() + 1
+
+        rowNumAndColNum.setText("$rowNum:$colNum")
+    }
+
+
 }

@@ -32,6 +32,8 @@
  */
 package com.kenlam.groovyconsole
 
+import com.kenlam.groovyconsole.projects.AGCProject
+
 import groovy.ui.*
 
 import groovy.ui.view.Defaults
@@ -46,6 +48,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import javax.swing.SwingConstants
 import javax.swing.JTabbedPane
+import javax.swing.JPanel
 
 switch (UIManager.getSystemLookAndFeelClassName()) {
     case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
@@ -102,22 +105,14 @@ container(consoleFrame) {
 	}
 	
 	projectTabs = tabbedPane(tabPlacement: JTabbedPane.TOP){
-		panel(name: "Project 1") {
+		builder_current_AGCProject = new AGCProject(consoleApp: controller)
+		JPanel builder_current_project_panel = panel(name: "Project 1") {
 			borderLayout()
-			build(contentPaneClass)
-			// build(statusBarClass)
-			panel(constraints: BorderLayout.SOUTH) {
-				gridBagLayout()
-				separator(gridwidth:GridBagConstraints.REMAINDER, fill:GridBagConstraints.HORIZONTAL)
-				status = label("Welcome to Groovy ${GroovySystem.version}.",
-					weightx:1.0,
-					anchor:GridBagConstraints.WEST,
-					fill:GridBagConstraints.HORIZONTAL,
-					insets: [1,3,1,3])
-				separator(orientation:SwingConstants.VERTICAL, fill:GridBagConstraints.VERTICAL)
-				rowNumAndColNum = label('1:1', insets: [1,3,1,3])
-			}
+			build(AdvancedGroovyConsoleContentPane.buildContentPaneForSingleProject)
 		}
+		// builder_current_AGCProject = null
+		// println "builder_current_project_panel ${builder_current_project_panel} (${builder_current_project_panel.getClass()})"
+		builder_current_AGCProject.panel = builder_current_project_panel
 		panel(name: "New Project") {
 			
 		}
@@ -126,13 +121,13 @@ container(consoleFrame) {
 
 }
 
-
-controller.promptStyle = promptStyle
-controller.commandStyle = commandStyle
-controller.outputStyle = outputStyle
-controller.stacktraceStyle = stacktraceStyle
-controller.hyperlinkStyle = hyperlinkStyle
-controller.resultStyle = resultStyle
+controller.projectTabs = projectTabs
+// controller.promptStyle = promptStyle  // Obsolete logic after tab implementation
+// controller.commandStyle = commandStyle  // Obsolete logic after tab implementation
+// controller.outputStyle = outputStyle  // Obsolete logic after tab implementation
+// controller.stacktraceStyle = stacktraceStyle  // Obsolete logic after tab implementation
+// controller.hyperlinkStyle = hyperlinkStyle  // Obsolete logic after tab implementation
+// controller.resultStyle = resultStyle  // Obsolete logic after tab implementation
 
 // add the window close handler
 if (consoleFrame instanceof java.awt.Window) {
@@ -140,13 +135,10 @@ if (consoleFrame instanceof java.awt.Window) {
 }
 
 // link in references to the controller
-controller.inputEditor = inputEditor
-controller.inputArea = inputEditor.textEditor
-controller.outputArea = outputArea
-controller.outputWindow = outputWindow
+// controller.outputWindow = outputWindow  // Obsolete logic after tab implementation
 controller.statusLabel = status
 controller.frame = consoleFrame
-controller.rowNumAndColNum = rowNumAndColNum
+// controller.rowNumAndColNum = rowNumAndColNum  // Obsolete logic after tab implementation
 controller.toolbar = toolbar
 
 // link actions
@@ -165,20 +157,13 @@ controller.hideOutputWindowAction2 = hideOutputWindowAction2
 controller.hideOutputWindowAction3 = hideOutputWindowAction3
 controller.hideOutputWindowAction4 = hideOutputWindowAction4
 controller.interruptAction = interruptAction
-controller.origDividerSize = origDividerSize
-controller.splitPane = splitPane
-controller.blank = blank
-controller.scrollArea = scrollArea
+// controller.origDividerSize = origDividerSize  // Obsolete logic after tab implementation
+// controller.splitPane = splitPane  // Obsolete logic after tab implementation
+// controller.blank = blank  // Obsolete logic after tab implementation
+// controller.scrollArea = scrollArea  // Obsolete logic after tab implementation
 
 // some more UI linkage
-controller.outputArea.addComponentListener(controller)
-controller.inputArea.addComponentListener(controller)
-controller.outputArea.addHyperlinkListener(controller)
-controller.outputArea.addHyperlinkListener(controller)
-controller.outputArea.addFocusListener(controller)
-controller.inputArea.addCaretListener(controller)
-controller.inputArea.document.addDocumentListener({ controller.setDirty(true) } as DocumentListener)
-controller.rootElement = inputArea.document.defaultRootElement
+// controller.rootElement = inputArea.document.defaultRootElement  // Obsolete logic after tab implementation
 
 
 def dtListener =  [
@@ -206,7 +191,7 @@ def dtListener =  [
     },
 ] as DropTargetListener
 
-[consoleFrame, inputArea, outputArea].each {
+[consoleFrame].each {
     new DropTarget(it, DnDConstants.ACTION_COPY, dtListener)
 }
 
