@@ -45,6 +45,7 @@ import javax.swing.event.DocumentListener
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import javax.swing.SwingConstants
+import javax.swing.JTabbedPane
 
 switch (UIManager.getSystemLookAndFeelClassName()) {
     case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
@@ -77,8 +78,6 @@ container(consoleFrame) {
     binding.menuBarDelegate.delegate = delegate
     binding['menuBarDelegate'](menuBarClass)
 
-    build(contentPaneClass)
-
     // build(toolBarClass)
 	toolbar = toolBar(rollover:true, visible:controller.showToolbar, constraints:BorderLayout.NORTH) {
 		button(newFileAction, text:null)
@@ -101,19 +100,30 @@ container(consoleFrame) {
 		button(runAction, text:null)
 		button(interruptAction, text:null)
 	}
-
-    // build(statusBarClass)
-	panel(constraints: BorderLayout.SOUTH) {
-		gridBagLayout()
-		separator(gridwidth:GridBagConstraints.REMAINDER, fill:GridBagConstraints.HORIZONTAL)
-		status = label("Welcome to Groovy ${GroovySystem.version}.",
-			weightx:1.0,
-			anchor:GridBagConstraints.WEST,
-			fill:GridBagConstraints.HORIZONTAL,
-			insets: [1,3,1,3])
-		separator(orientation:SwingConstants.VERTICAL, fill:GridBagConstraints.VERTICAL)
-		rowNumAndColNum = label('1:1', insets: [1,3,1,3])
+	
+	projectTabs = tabbedPane(tabPlacement: JTabbedPane.TOP){
+		panel(name: "Project 1") {
+			borderLayout()
+			build(contentPaneClass)
+			// build(statusBarClass)
+			panel(constraints: BorderLayout.SOUTH) {
+				gridBagLayout()
+				separator(gridwidth:GridBagConstraints.REMAINDER, fill:GridBagConstraints.HORIZONTAL)
+				status = label("Welcome to Groovy ${GroovySystem.version}.",
+					weightx:1.0,
+					anchor:GridBagConstraints.WEST,
+					fill:GridBagConstraints.HORIZONTAL,
+					insets: [1,3,1,3])
+				separator(orientation:SwingConstants.VERTICAL, fill:GridBagConstraints.VERTICAL)
+				rowNumAndColNum = label('1:1', insets: [1,3,1,3])
+			}
+		}
+		panel(name: "New Project") {
+			
+		}
 	}
+
+
 }
 
 
