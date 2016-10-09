@@ -40,7 +40,7 @@ import java.util.prefs.Preferences
 
 menuBarClass     = groovy.ui.view.BasicMenuBar
 contentPaneClass = groovy.ui.view.BasicContentPane
-toolBarClass     = groovy.ui.view.BasicToolBar
+// toolBarClass     = groovy.ui.view.BasicToolBar
 // statusBarClass   = groovy.ui.view.BasicStatusBar
 
 def prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
