@@ -5,3 +5,4 @@
 5. Load script file
 6. Drag and drop
 7. Fix starting window size problem.
+8. Per project undo and redo action
