@@ -76,7 +76,6 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
 import groovy.transform.ThreadInterrupt
 import javax.swing.event.DocumentListener
-import com.kenlam.groovyconsole.projects.AGCProject
 
 /**
  * Groovy Swing console.
@@ -125,10 +124,10 @@ class AdvancedGroovyConsole extends Console {
     Action hideOutputWindowAction3
     Action hideOutputWindowAction4
     int origDividerSize
-    // Component outputWindow
+    Component outputWindow
     Component copyFromComponent
-    // Component blank
-    // Component scrollArea
+    Component blank
+    Component scrollArea
 
     boolean autoClearOutput = prefs.getBoolean('autoClearOutput', false)
     Action autoClearOutputAction
@@ -152,26 +151,26 @@ class AdvancedGroovyConsole extends Console {
     // UI
     SwingBuilder swing
     RootPaneContainer frame
-    // ConsoleTextEditor inputEditor
-    // JSplitPane splitPane
-    // JTextPane inputArea
-    // JTextPane outputArea
-    // JLabel statusLabel
-    // JLabel rowNumAndColNum
+    ConsoleTextEditor inputEditor
+    JSplitPane splitPane
+    JTextPane inputArea
+    JTextPane outputArea
+    JLabel statusLabel
+    JLabel rowNumAndColNum
 
     // row info
-    // Element rootElement
-    // int cursorPos
-    // int rowNum
-    // int colNum
+    Element rootElement
+    int cursorPos
+    int rowNum
+    int colNum
 
     // Styles for output area
-    // Style promptStyle
-    // Style commandStyle
-    // Style outputStyle
-    // Style stacktraceStyle
-    // Style hyperlinkStyle
-    // Style resultStyle
+    Style promptStyle
+    Style commandStyle
+    Style outputStyle
+    Style stacktraceStyle
+    Style hyperlinkStyle
+    Style resultStyle
 
     // Internal history
     List history = []
@@ -179,16 +178,12 @@ class AdvancedGroovyConsole extends Console {
     HistoryRecord pendingRecord = new HistoryRecord( allText: '', selectionStart: 0, selectionEnd: 0)
     Action prevHistoryAction
     Action nextHistoryAction
-	
-	List<AGCProject> projects = []
-	AGCProject currentProject
-	JTabbedPane projectTabs
 
     // Current editor state
-    // boolean dirty
+    boolean dirty
     Action saveAction
-    // int textSelectionStart  // keep track of selections in inputArea
-    // int textSelectionEnd
+    int textSelectionStart  // keep track of selections in inputArea
+    int textSelectionEnd
     def scriptFile
     File currentFileChooserDir = new File(Preferences.userNodeForPackage(AdvancedGroovyConsole).get('currentFileChooserDir', '.'))
     File currentClasspathJarDir = new File(Preferences.userNodeForPackage(AdvancedGroovyConsole).get('currentClasspathJarDir', '.'))
@@ -318,7 +313,6 @@ options:
     }
 
     void run(Map defaults) {
-		println "run (this = $this)"
 
         swing = new SwingBuilder()
         defaults.each{k, v -> swing[k] = v}
@@ -337,14 +331,17 @@ options:
 
         bindResults()
 
-		fileNewFile()
+        // stitch some actions together
+        swing.bind(source:swing.inputEditor.undoAction, sourceProperty:'enabled', target:swing.undoAction, targetProperty:'enabled')
+        swing.bind(source:swing.inputEditor.redoAction, sourceProperty:'enabled', target:swing.redoAction, targetProperty:'enabled')
+
         if (swing.consoleFrame instanceof java.awt.Window) {
             nativeFullScreenForMac(swing.consoleFrame)
-			// swing.consoleFrame.setPreferredSize(new Dimension(600, 500))
             swing.consoleFrame.pack()
             swing.consoleFrame.show()
         }
         installInterceptor()
+        swing.doLater inputArea.&requestFocus
     }
 
     /**
@@ -396,7 +393,7 @@ options:
 
     // Append a string to the output area
     void appendOutput(String text, AttributeSet style){
-        def doc = currentProject.outputArea.styledDocument
+        def doc = outputArea.styledDocument
         doc.insertString(doc.length, text, style)
         ensureNoDocLengthOverflow(doc)
     }
@@ -424,7 +421,7 @@ options:
     }
 
     void appendStacktrace(text) {
-        def doc = currentProject.outputArea.styledDocument
+        def doc = outputArea.styledDocument
 
         // split lines by new line separator
         def lines = text.split(/(\n|\r|\r\n|\u0085|\u2028|\u2029)/)
@@ -446,17 +443,17 @@ options:
                 def length = fileNameAndLineNumber.length()
                 def index = line.indexOf(fileNameAndLineNumber)
 
-                def style = currentProject.hyperlinkStyle
+                def style = hyperlinkStyle
                 def hrefAttr = new SimpleAttributeSet()
                 // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
                 hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + fileNameAndLineNumber)
                 style.addAttribute(HTML.Tag.A, hrefAttr);
 
-                doc.insertString(initialLength,                     line[0..<index],                    currentProject.stacktraceStyle)
+                doc.insertString(initialLength,                     line[0..<index],                    stacktraceStyle)
                 doc.insertString(initialLength + index,             line[index..<(index + length)],     style)
-                doc.insertString(initialLength + index + length,    line[(index + length)..-1] + '\n',  currentProject.stacktraceStyle)
+                doc.insertString(initialLength + index + length,    line[(index + length)..-1] + '\n',  stacktraceStyle)
             } else {
-                doc.insertString(initialLength, line + '\n', currentProject.stacktraceStyle)
+                doc.insertString(initialLength, line + '\n', stacktraceStyle)
             }
         }
 
@@ -465,7 +462,7 @@ options:
 
     // Append a string to the output area on a new line
     void appendOutputNl(text, style) {
-        def doc = currentProject.outputArea.styledDocument
+        def doc = outputArea.styledDocument
         def len = doc.length
         def alreadyNewLine = (len == 0 || doc.getText(len - 1, 1) == '\n')
         doc.insertString(doc.length, ' \n', style)
@@ -477,7 +474,7 @@ options:
 
     void appendOutputLines(text, style) {
         appendOutput(text, style)
-        def doc = currentProject.outputArea.styledDocument
+        def doc = outputArea.styledDocument
         def len = doc.length
         doc.insertString(len, ' \n', style)
         doc.remove(len, 2) // windows hack to fix (improve?) line spacing
@@ -549,21 +546,20 @@ options:
         def oldDetachedOutput = detachedOutput
         detachedOutput = evt.source.selected
         prefs.putBoolean('detachedOutput', detachedOutput)
-		def outputWindow = currentProject.outputWindow
         if (oldDetachedOutput != detachedOutput) {
             if (detachedOutput) {
-                currentProject.splitPane.add(currentProject.blank, JSplitPane.BOTTOM)
-                origDividerSize = currentProject.splitPane.dividerSize
-                currentProject.splitPane.dividerSize = 0
-                currentProject.splitPane.resizeWeight = 1.0
-                outputWindow.add(currentProject.scrollArea, BorderLayout.CENTER)
+                splitPane.add(blank, JSplitPane.BOTTOM)
+                origDividerSize = splitPane.dividerSize
+                splitPane.dividerSize = 0
+                splitPane.resizeWeight = 1.0
+                outputWindow.add(scrollArea, BorderLayout.CENTER)
                 prepareOutputWindow()
             } else {
-                currentProject.splitPane.add(currentProject.scrollArea, JSplitPane.BOTTOM)
-                currentProject.splitPane.dividerSize = origDividerSize
-                outputWindow.add(currentProject.blank, BorderLayout.CENTER)
+                splitPane.add(scrollArea, JSplitPane.BOTTOM)
+                splitPane.dividerSize = origDividerSize
+                outputWindow.add(blank, BorderLayout.CENTER)
                 outputWindow.visible = false
-                currentProject.splitPane.resizeWeight = 0.5
+                splitPane.resizeWeight = 0.5
             }
         }
     }
@@ -582,9 +578,15 @@ options:
             config.addCompilationCustomizers(new ASTTransformationCustomizer(ThreadInterrupt))
         }
     }
-	
+
+    void caretUpdate(CaretEvent e){
+        textSelectionStart = Math.min(e.dot,e.mark)
+        textSelectionEnd = Math.max(e.dot,e.mark)
+        setRowNumAndColNum()
+    }
+
     void clearOutput(EventObject evt = null) {
-        currentProject.outputArea.text = ''
+        outputArea.text = ''
     }
 
     // If at exit time, a script is running, the user is given an option to interrupt it first
@@ -610,9 +612,7 @@ options:
                 if (frame instanceof java.awt.Window) {
                     frame.hide()
                     frame.dispose()
-					this.projects.each{ AGCProject project ->
-						project.outputWindow?.dispose()
-					}
+                    outputWindow?.dispose()
                 }
                 FindReplaceUtility.dispose()
                 consoleControllers.remove(this)
@@ -623,58 +623,13 @@ options:
             }
         }
     }
-	
-	public static final Closure swingBuildViewDefaults = {
-		switch (UIManager.getSystemLookAndFeelClassName()) {
-			case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
-			case 'com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel':
-				build(ViewWindowsDefaults)
-				menuBarClass = AdvancedGroovyConsoleMenuBar
-				break
-
-			case 'apple.laf.AquaLookAndFeel':
-			case 'com.apple.laf.AquaLookAndFeel':
-				build(MacOSXDefaults)
-				break
-
-			case 'com.sun.java.swing.plaf.gtk.GTKLookAndFeel':
-				build(GTKDefaults)
-				break
-
-			default:
-				build(ViewDefaults)
-				break
-		}
-	}
 
     void fileNewFile(EventObject evt = null) {
-		println "fileNewFile ${evt}"
-        // if (askToSaveFile()) {
-            // scriptFile = null
-            // setDirty(false)
-            // inputArea.text = ''
-        // }
-		
-		SwingBuilder swing = new SwingBuilder()
-		// add controller to the swingBuilder bindings
-        swing.controller = this
-		AGCProject newProject = new AGCProject(consoleApp: this)
-		swing.builder_current_AGCProject = newProject
-		swing.build(AdvancedGroovyConsoleActions)
-		swing.build(AdvancedGroovyConsole.swingBuildViewDefaults)
-		this.currentProject = newProject
-		this.projects.push(currentProject)
-        def buildReturn = swing.build(AdvancedGroovyConsoleContentPane.buildPanelForSingleProject)
-		
-		// stitch some actions together
-		swing.bind(source:currentProject.inputEditor.undoAction, sourceProperty:'enabled', target:swing.undoAction, targetProperty:'enabled')
-		swing.bind(source:currentProject.inputEditor.redoAction, sourceProperty:'enabled', target:swing.redoAction, targetProperty:'enabled')
-
-		println "buildReturn ${buildReturn} (${buildReturn.getClass()})"
-		projectTabs.addTab("Tab", buildReturn);
-		newProject.updateTitle()
-		
-		swing.doLater currentProject.inputArea.&requestFocus
+        if (askToSaveFile()) {
+            scriptFile = null
+            setDirty(false)
+            inputArea.text = ''
+        }
     }
 
     // Start a new window with a copy of current variables
@@ -758,17 +713,17 @@ options:
 
     def finishException(Throwable t, boolean executing) {
         if(executing) {
-            currentProject.statusLabel.text = 'Execution terminated with exception.'
+            statusLabel.text = 'Execution terminated with exception.'
             history[-1].exception = t
         } else {
-            currentProject.statusLabel.text = 'Compilation failed.'
+            statusLabel.text = 'Compilation failed.'
         }
 
         if (t instanceof MultipleCompilationErrorsException) {
             MultipleCompilationErrorsException mcee = t
             ErrorCollector collector = mcee.errorCollector
             int count = collector.errorCount
-            appendOutputNl("${count} compilation error${count > 1 ? 's' : ''}:\n\n", currentProject.commandStyle)
+            appendOutputNl("${count} compilation error${count > 1 ? 's' : ''}:\n\n", commandStyle)
 
             collector.errors.each { error ->
                 if (error instanceof SyntaxErrorMessage) {
@@ -778,22 +733,22 @@ options:
 
                     String scriptFileName = scriptFile?.name ?: DEFAULT_SCRIPT_NAME_START 
 
-                    def doc = currentProject.outputArea.styledDocument
+                    def doc = outputArea.styledDocument
 
-                    def style = currentProject.hyperlinkStyle
+                    def style = hyperlinkStyle
                     def hrefAttr = new SimpleAttributeSet()
                     // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
                     hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + scriptFileName + ':' + errorLine)
                     style.addAttribute(HTML.Tag.A, hrefAttr);
 
-                    doc.insertString(doc.length, message + ' at ', currentProject.stacktraceStyle)
+                    doc.insertString(doc.length, message + ' at ', stacktraceStyle)
                     doc.insertString(doc.length, "line: ${se.line}, column: ${se.startColumn}\n\n", style)
                 } else if (error instanceof Throwable) {
                     reportException(error)
                 } else if (error instanceof ExceptionMessage) {
                     reportException(error.cause) 
                 } else if (error instanceof SimpleMessage) {
-                    def doc = currentProject.outputArea.styledDocument
+                    def doc = outputArea.styledDocument
                     doc.insertString(doc.length, "${error.message}\n", new SimpleAttributeSet())
                 }
             }
@@ -806,7 +761,7 @@ options:
         }
 
         // GROOVY-4496: set the output window position to the top-left so the exception details are visible from the start
-        currentProject.outputArea.caretPosition = 0 
+        outputArea.caretPosition = 0 
 
         if (detachedOutput) {
             prepareOutputWindow()
@@ -819,7 +774,7 @@ options:
     }
 
     private reportException(Throwable t) {
-        appendOutputNl('Exception thrown\n', currentProject.commandStyle)
+        appendOutputNl('Exception thrown\n', commandStyle)
 
         StringWriter sw = new StringWriter()
         new PrintWriter(sw).withWriter {pw -> StackTraceUtils.deepSanitize(t).printStackTrace(pw) }
@@ -830,16 +785,16 @@ options:
         // Take down the wait/cancel dialog
         history[-1].result = result
         if (result != null) {
-            currentProject.statusLabel.text = 'Execution complete.'
-            appendOutputNl('Result: ', currentProject.promptStyle)
+            statusLabel.text = 'Execution complete.'
+            appendOutputNl('Result: ', promptStyle)
             def obj = (visualizeScriptResults
                 ? OutputTransforms.transformResult(result, shell.getContext()._outputTransforms)
                 : result.toString())
 
             // multi-methods are magical!
-            appendOutput(obj, currentProject.resultStyle)
+            appendOutput(obj, resultStyle)
         } else {
-            currentProject.statusLabel.text = 'Execution complete. Result was null.'
+            statusLabel.text = 'Execution complete. Result was null.'
         }
         bindResults()
         if (detachedOutput) {
@@ -849,15 +804,13 @@ options:
     }
     
     def compileFinishNormal() {
-        currentProject.statusLabel.text = 'Compilation complete.'
+        statusLabel.text = 'Compilation complete.'
     }
 
     private def prepareOutputWindow() {
-        currentProject.outputArea.setPreferredSize(null)
-		def outputWindow = currentProject.outputWindow
-		def inputEditor = currentProject.inputEditor
+        outputArea.setPreferredSize(null)
         outputWindow.pack()
-        currentProject.outputArea.setPreferredSize([calcPreferredSize(outputWindow.getWidth(), inputEditor.getWidth(), 120),
+        outputArea.setPreferredSize([calcPreferredSize(outputWindow.getWidth(), inputEditor.getWidth(), 120),
                 calcPreferredSize(outputWindow.getHeight(), inputEditor.getHeight(), 60)] as Dimension)
         outputWindow.pack()
     }
@@ -881,7 +834,7 @@ options:
         if (historyIndex < history.size()) {
             setInputTextFromHistory(historyIndex + 1)
         } else {
-            currentProject.statusLabel.text = "Can't go past end of history (time travel not allowed)"
+            statusLabel.text = "Can't go past end of history (time travel not allowed)"
             beep()
         }
     }
@@ -890,7 +843,7 @@ options:
         if (historyIndex > 0) {
             setInputTextFromHistory(historyIndex - 1)
         } else {
-            currentProject.statusLabel.text = "Can't go past start of history"
+            statusLabel.text = "Can't go past start of history"
             beep()
         }
     }
@@ -913,7 +866,7 @@ options:
     }
 
     void largerFont(EventObject evt = null) {
-        updateFontSize(currentProject.inputArea.font.size + 2)
+        updateFontSize(inputArea.font.size + 2)
     }
 	
 	static void initLogFile() {
@@ -931,15 +884,14 @@ options:
             // Output as normal
             return true
         }
-		// Thread curThread = Thread.currentThread()
-		// writeStringToLogFile("notifySystemOut curThread ${curThread} (${curThread.getClass()})")
+
         // Put onto GUI
         if (EventQueue.isDispatchThread()) {
-            consoleControllers.each {it.appendOutputLines(str, it.currentProject.outputStyle)}
+            consoleControllers.each {it.appendOutputLines(str, it.outputStyle)}
         }
         else {
             SwingUtilities.invokeLater {
-                consoleControllers.each {it.appendOutputLines(str, it.currentProject.outputStyle)}
+                consoleControllers.each {it.appendOutputLines(str, it.outputStyle)}
             }
         }
         return true
@@ -1016,15 +968,15 @@ options:
 
     private void runScriptImpl(boolean selected) {
         if(scriptRunning) {
-            currentProject.statusLabel.text = 'Cannot run script now as a script is already running. Please wait or use "Interrupt Script" option.'
+            statusLabel.text = 'Cannot run script now as a script is already running. Please wait or use "Interrupt Script" option.'
             return
         }
         scriptRunning = true
         interruptAction.enabled = true
         stackOverFlowError = false // reset this flag before running a script
         def endLine = System.getProperty('line.separator')
-        def record = new HistoryRecord( allText: currentProject.inputArea.getText().replaceAll(endLine, '\n'),
-            selectionStart: currentProject.textSelectionStart, selectionEnd: currentProject.textSelectionEnd)
+        def record = new HistoryRecord( allText: inputArea.getText().replaceAll(endLine, '\n'),
+            selectionStart: textSelectionStart, selectionEnd: textSelectionEnd)
         addToHistory(record)
         pendingRecord = new HistoryRecord(allText:'', selectionStart:0, selectionEnd:0)
 
@@ -1033,10 +985,10 @@ options:
         // Print the input text
         if (showScriptInOutput) {
             for (line in record.getTextToRun(selected).tokenize('\n')) {
-                appendOutputNl('groovy> ', currentProject.promptStyle)
-                appendOutput(line, currentProject.commandStyle)
+                appendOutputNl('groovy> ', promptStyle)
+                appendOutput(line, commandStyle)
             }
-            appendOutputNl(' \n', currentProject.promptStyle)
+            appendOutputNl(' \n', promptStyle)
         }
 
         // Kick off a new thread to do the evaluation
@@ -1083,23 +1035,23 @@ options:
 
     void compileScript(EventObject evt = null) {
         if(scriptRunning) {
-            currentProject.statusLabel.text = 'Cannot compile script now as a script is already running. Please wait or use "Interrupt Script" option.'
+            statusLabel.text = 'Cannot compile script now as a script is already running. Please wait or use "Interrupt Script" option.'
             return
         }
         stackOverFlowError = false // reset this flag before running a script
         def endLine = System.getProperty('line.separator')
-        def record = new HistoryRecord( allText: currentProject.inputArea.getText().replaceAll(endLine, '\n'),
-            selectionStart: currentProject.textSelectionStart, selectionEnd: currentProject.textSelectionEnd)
+        def record = new HistoryRecord( allText: inputArea.getText().replaceAll(endLine, '\n'),
+            selectionStart: textSelectionStart, selectionEnd: textSelectionEnd)
 
         if (prefs.getBoolean('autoClearOutput', false)) clearOutput()
 
         // Print the input text
         if (showScriptInOutput) {
             for (line in record.allText.tokenize('\n')) {
-                appendOutputNl('groovy> ', currentProject.promptStyle)
-                appendOutput(line, currentProject.commandStyle)
+                appendOutputNl('groovy> ', promptStyle)
+                appendOutput(line, commandStyle)
             }
-            appendOutputNl(' \n', currentProject.promptStyle)
+            appendOutputNl(' \n', promptStyle)
         }
 
         // Kick off a new thread to do the compilation
@@ -1134,25 +1086,32 @@ options:
         }
     }
 
+    void setDirty(boolean newDirty) {
+        //TODO when @BoundProperty is live, this should be handled via listeners
+        dirty = newDirty
+        saveAction.enabled = newDirty
+        updateTitle()
+    }
+
     private void setInputTextFromHistory(newIndex) {
         def endLine = System.getProperty('line.separator')
         if (historyIndex >= history.size()) {
-            pendingRecord = new HistoryRecord( allText: currentProject.inputArea.getText().replaceAll(endLine, '\n'),
-                selectionStart: currentProject.textSelectionStart, selectionEnd: currentProject.textSelectionEnd)
+            pendingRecord = new HistoryRecord( allText: inputArea.getText().replaceAll(endLine, '\n'),
+                selectionStart: textSelectionStart, selectionEnd: textSelectionEnd)
         }
         historyIndex = newIndex
         def record
         if (historyIndex < history.size()) {
             record = history[historyIndex]
-            currentProject.statusLabel.text = "command history ${history.size() - historyIndex}"
+            statusLabel.text = "command history ${history.size() - historyIndex}"
         } else {
             record = pendingRecord
-            currentProject.statusLabel.text = 'at end of history'
+            statusLabel.text = 'at end of history'
         }
-        currentProject.inputArea.text = record.allText
-        currentProject.inputArea.selectionStart = record.selectionStart
-        currentProject.inputArea.selectionEnd = record.selectionEnd
-        currentProject.setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
+        inputArea.text = record.allText
+        inputArea.selectionStart = record.selectionStart
+        inputArea.selectionEnd = record.selectionEnd
+        setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
         updateHistoryActions()
     }
 
@@ -1239,22 +1198,22 @@ options:
     }
 
     void showMessage(String message) {
-        currentProject.statusLabel.text = message
+        statusLabel.text = message
     }
 
     void showExecutingMessage() {
-        currentProject.statusLabel.text = 'Script executing now. Please wait or use "Interrupt Script" option.'
+        statusLabel.text = 'Script executing now. Please wait or use "Interrupt Script" option.'
     }
 
     void showCompilingMessage() {
-        currentProject.statusLabel.text = 'Script compiling now. Please wait.'
+        statusLabel.text = 'Script compiling now. Please wait.'
     }
     
     // Shows the detached 'outputArea' dialog
     void showOutputWindow(EventObject evt = null) {
         if (detachedOutput) {
-            currentProject.outputWindow.setLocationRelativeTo(frame)
-            currentProject.outputWindow.show()
+            outputWindow.setLocationRelativeTo(frame)
+            outputWindow.show()
         }
     }
 
@@ -1270,7 +1229,7 @@ options:
     }
 
     void smallerFont(EventObject evt = null){
-        updateFontSize(currentProject.inputArea.font.size - 2)
+        updateFontSize(inputArea.font.size - 2)
     }
 
     void updateTitle() {
@@ -1293,9 +1252,9 @@ options:
         prefs.putInt('fontSize', newFontSize)
 
         // don't worry, the fonts won't be changed to this family, the styles will only derive from this
-        def newFont = new Font(currentProject.inputEditor.defaultFamily, Font.PLAIN, newFontSize)
-        currentProject.inputArea.font = newFont
-        currentProject.outputArea.font = newFont
+        def newFont = new Font(inputEditor.defaultFamily, Font.PLAIN, newFontSize)
+        inputArea.font = newFont
+        outputArea.font = newFont
     }
 
     void invokeTextAction(evt, closure, area = inputArea) {
@@ -1321,17 +1280,88 @@ options:
         invokeTextAction(evt, { source -> source.selectAll() })
     }
 
+    void setRowNumAndColNum() {
+        cursorPos = inputArea.getCaretPosition()
+        rowNum = rootElement.getElementIndex(cursorPos) + 1
+
+        def rowElement = rootElement.getElement(rowNum - 1)
+        colNum = cursorPos - rowElement.getStartOffset() + 1
+
+        rowNumAndColNum.setText("$rowNum:$colNum")
+    }
+
     void print(EventObject evt = null) {
-        currentProject.inputEditor.printAction.actionPerformed(evt)
+        inputEditor.printAction.actionPerformed(evt)
     }
 
     void undo(EventObject evt = null) {
-        currentProject.inputEditor.undoAction.actionPerformed(evt)
+        inputEditor.undoAction.actionPerformed(evt)
     }
 
     void redo(EventObject evt = null) {
-        currentProject.inputEditor.redoAction.actionPerformed(evt)
+        inputEditor.redoAction.actionPerformed(evt)
     }
+
+    void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+            // URL of the form: file://myscript.groovy:32
+            String url = e.getURL()
+            int lineNumber = url[(url.lastIndexOf(':') + 1)..-1].toInteger()
+
+            def editor = inputEditor.textEditor
+            def text = editor.text
+
+            int newlineBefore = 0
+            int newlineAfter = 0
+            int currentLineNumber = 1
+
+            // let's find the previous and next newline surrounding the offending line
+            int i = 0
+            for (ch in text) {
+                if (ch == '\n') {
+                    currentLineNumber++
+                }
+                if (currentLineNumber == lineNumber) {
+                    newlineBefore = i
+                    def nextNewline = text.indexOf('\n', i + 1)
+                    newlineAfter = nextNewline > -1 ? nextNewline : text.length()
+                    break
+                }
+                i++
+            }
+
+            // highlight / select the whole line
+            editor.setCaretPosition(newlineBefore)
+            editor.moveCaretPosition(newlineAfter)
+        }
+    }
+
+    void componentHidden(ComponentEvent e) { }
+
+    void componentMoved(ComponentEvent e) { }
+
+    void componentResized(ComponentEvent e) {
+        def component = e.getComponent()
+        if (component == outputArea || component == inputArea) {
+            def rect = component.getVisibleRect()
+            prefs.putInt("${component.name}Width", rect.getWidth().intValue())
+            prefs.putInt("${component.name}Height", rect.getHeight().intValue())
+        } else {
+            prefs.putInt("${component.name}Width", component.width)
+            prefs.putInt("${component.name}Height", component.height)
+        }
+    }
+
+    public void componentShown(ComponentEvent e) { }
+
+    public void focusGained(FocusEvent e) {
+        // remember component with focus for text-copy functionality
+        if (e.component == outputArea || e.component == inputArea) {
+            copyFromComponent = e.component
+        }
+    }
+
+    public void focusLost(FocusEvent e) { }
 }
 
 class GroovyFileFilter extends FileFilter {
