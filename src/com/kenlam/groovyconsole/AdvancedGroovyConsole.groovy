@@ -156,7 +156,7 @@ class AdvancedGroovyConsole extends Console {
     // JSplitPane splitPane
     // JTextPane inputArea
     // JTextPane outputArea
-    JLabel statusLabel
+    // JLabel statusLabel
     // JLabel rowNumAndColNum
 
     // row info
@@ -334,16 +334,10 @@ options:
 
         // create the view
         swing.build(AdvancedGroovyConsoleView)
-		
-		this.currentProject = swing.builder_current_AGCProject
-		this.projects.push(currentProject)
 
         bindResults()
 
-        // stitch some actions together
-        swing.bind(source:currentProject.inputEditor.undoAction, sourceProperty:'enabled', target:swing.undoAction, targetProperty:'enabled')
-        swing.bind(source:currentProject.inputEditor.redoAction, sourceProperty:'enabled', target:swing.redoAction, targetProperty:'enabled')
-
+		fileNewFile()
         if (swing.consoleFrame instanceof java.awt.Window) {
             nativeFullScreenForMac(swing.consoleFrame)
 			// swing.consoleFrame.setPreferredSize(new Dimension(600, 500))
@@ -351,7 +345,6 @@ options:
             swing.consoleFrame.show()
         }
         installInterceptor()
-        swing.doLater currentProject.inputArea.&requestFocus
     }
 
     /**
@@ -630,13 +623,58 @@ options:
             }
         }
     }
+	
+	public static final Closure swingBuildViewDefaults = {
+		switch (UIManager.getSystemLookAndFeelClassName()) {
+			case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
+			case 'com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel':
+				build(ViewWindowsDefaults)
+				menuBarClass = AdvancedGroovyConsoleMenuBar
+				break
+
+			case 'apple.laf.AquaLookAndFeel':
+			case 'com.apple.laf.AquaLookAndFeel':
+				build(MacOSXDefaults)
+				break
+
+			case 'com.sun.java.swing.plaf.gtk.GTKLookAndFeel':
+				build(GTKDefaults)
+				break
+
+			default:
+				build(ViewDefaults)
+				break
+		}
+	}
 
     void fileNewFile(EventObject evt = null) {
-        if (askToSaveFile()) {
-            scriptFile = null
-            setDirty(false)
-            inputArea.text = ''
-        }
+		println "fileNewFile ${evt}"
+        // if (askToSaveFile()) {
+            // scriptFile = null
+            // setDirty(false)
+            // inputArea.text = ''
+        // }
+		
+		SwingBuilder swing = new SwingBuilder()
+		// add controller to the swingBuilder bindings
+        swing.controller = this
+		AGCProject newProject = new AGCProject(consoleApp: this)
+		swing.builder_current_AGCProject = newProject
+		swing.build(AdvancedGroovyConsoleActions)
+		swing.build(AdvancedGroovyConsole.swingBuildViewDefaults)
+		this.currentProject = newProject
+		this.projects.push(currentProject)
+        def buildReturn = swing.build(AdvancedGroovyConsoleContentPane.buildPanelForSingleProject)
+		
+		// stitch some actions together
+		swing.bind(source:currentProject.inputEditor.undoAction, sourceProperty:'enabled', target:swing.undoAction, targetProperty:'enabled')
+		swing.bind(source:currentProject.inputEditor.redoAction, sourceProperty:'enabled', target:swing.redoAction, targetProperty:'enabled')
+
+		println "buildReturn ${buildReturn} (${buildReturn.getClass()})"
+		projectTabs.addTab("Tab", buildReturn);
+		newProject.updateTitle()
+		
+		swing.doLater currentProject.inputArea.&requestFocus
     }
 
     // Start a new window with a copy of current variables
@@ -720,10 +758,10 @@ options:
 
     def finishException(Throwable t, boolean executing) {
         if(executing) {
-            statusLabel.text = 'Execution terminated with exception.'
+            currentProject.statusLabel.text = 'Execution terminated with exception.'
             history[-1].exception = t
         } else {
-            statusLabel.text = 'Compilation failed.'
+            currentProject.statusLabel.text = 'Compilation failed.'
         }
 
         if (t instanceof MultipleCompilationErrorsException) {
@@ -792,7 +830,7 @@ options:
         // Take down the wait/cancel dialog
         history[-1].result = result
         if (result != null) {
-            statusLabel.text = 'Execution complete.'
+            currentProject.statusLabel.text = 'Execution complete.'
             appendOutputNl('Result: ', currentProject.promptStyle)
             def obj = (visualizeScriptResults
                 ? OutputTransforms.transformResult(result, shell.getContext()._outputTransforms)
@@ -801,7 +839,7 @@ options:
             // multi-methods are magical!
             appendOutput(obj, currentProject.resultStyle)
         } else {
-            statusLabel.text = 'Execution complete. Result was null.'
+            currentProject.statusLabel.text = 'Execution complete. Result was null.'
         }
         bindResults()
         if (detachedOutput) {
@@ -811,7 +849,7 @@ options:
     }
     
     def compileFinishNormal() {
-        statusLabel.text = 'Compilation complete.'
+        currentProject.statusLabel.text = 'Compilation complete.'
     }
 
     private def prepareOutputWindow() {
@@ -843,7 +881,7 @@ options:
         if (historyIndex < history.size()) {
             setInputTextFromHistory(historyIndex + 1)
         } else {
-            statusLabel.text = "Can't go past end of history (time travel not allowed)"
+            currentProject.statusLabel.text = "Can't go past end of history (time travel not allowed)"
             beep()
         }
     }
@@ -852,7 +890,7 @@ options:
         if (historyIndex > 0) {
             setInputTextFromHistory(historyIndex - 1)
         } else {
-            statusLabel.text = "Can't go past start of history"
+            currentProject.statusLabel.text = "Can't go past start of history"
             beep()
         }
     }
@@ -978,7 +1016,7 @@ options:
 
     private void runScriptImpl(boolean selected) {
         if(scriptRunning) {
-            statusLabel.text = 'Cannot run script now as a script is already running. Please wait or use "Interrupt Script" option.'
+            currentProject.statusLabel.text = 'Cannot run script now as a script is already running. Please wait or use "Interrupt Script" option.'
             return
         }
         scriptRunning = true
@@ -1045,7 +1083,7 @@ options:
 
     void compileScript(EventObject evt = null) {
         if(scriptRunning) {
-            statusLabel.text = 'Cannot compile script now as a script is already running. Please wait or use "Interrupt Script" option.'
+            currentProject.statusLabel.text = 'Cannot compile script now as a script is already running. Please wait or use "Interrupt Script" option.'
             return
         }
         stackOverFlowError = false // reset this flag before running a script
@@ -1099,22 +1137,22 @@ options:
     private void setInputTextFromHistory(newIndex) {
         def endLine = System.getProperty('line.separator')
         if (historyIndex >= history.size()) {
-            pendingRecord = new HistoryRecord( allText: inputArea.getText().replaceAll(endLine, '\n'),
-                selectionStart: textSelectionStart, selectionEnd: textSelectionEnd)
+            pendingRecord = new HistoryRecord( allText: currentProject.inputArea.getText().replaceAll(endLine, '\n'),
+                selectionStart: currentProject.textSelectionStart, selectionEnd: currentProject.textSelectionEnd)
         }
         historyIndex = newIndex
         def record
         if (historyIndex < history.size()) {
             record = history[historyIndex]
-            statusLabel.text = "command history ${history.size() - historyIndex}"
+            currentProject.statusLabel.text = "command history ${history.size() - historyIndex}"
         } else {
             record = pendingRecord
-            statusLabel.text = 'at end of history'
+            currentProject.statusLabel.text = 'at end of history'
         }
-        inputArea.text = record.allText
-        inputArea.selectionStart = record.selectionStart
-        inputArea.selectionEnd = record.selectionEnd
-        setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
+        currentProject.inputArea.text = record.allText
+        currentProject.inputArea.selectionStart = record.selectionStart
+        currentProject.inputArea.selectionEnd = record.selectionEnd
+        currentProject.setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
         updateHistoryActions()
     }
 
@@ -1201,15 +1239,15 @@ options:
     }
 
     void showMessage(String message) {
-        statusLabel.text = message
+        currentProject.statusLabel.text = message
     }
 
     void showExecutingMessage() {
-        statusLabel.text = 'Script executing now. Please wait or use "Interrupt Script" option.'
+        currentProject.statusLabel.text = 'Script executing now. Please wait or use "Interrupt Script" option.'
     }
 
     void showCompilingMessage() {
-        statusLabel.text = 'Script compiling now. Please wait.'
+        currentProject.statusLabel.text = 'Script compiling now. Please wait.'
     }
     
     // Shows the detached 'outputArea' dialog

@@ -48,28 +48,8 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import javax.swing.SwingConstants
 import javax.swing.JTabbedPane
-import javax.swing.JPanel
 
-switch (UIManager.getSystemLookAndFeelClassName()) {
-    case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
-    case 'com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel':
-        build(ViewWindowsDefaults)
-		menuBarClass = AdvancedGroovyConsoleMenuBar
-        break
-
-    case 'apple.laf.AquaLookAndFeel':
-    case 'com.apple.laf.AquaLookAndFeel':
-        build(MacOSXDefaults)
-        break
-
-    case 'com.sun.java.swing.plaf.gtk.GTKLookAndFeel':
-        build(GTKDefaults)
-        break
-
-    default:
-        build(ViewDefaults)
-        break
-}
+build(AdvancedGroovyConsole.swingBuildViewDefaults)
 
 binding.rootContainerDelegate.delegate = this
 
@@ -105,17 +85,8 @@ container(consoleFrame) {
 	}
 	
 	projectTabs = tabbedPane(tabPlacement: JTabbedPane.TOP){
-		builder_current_AGCProject = new AGCProject(consoleApp: controller)
-		JPanel builder_current_project_panel = panel(name: "Project 1") {
-			borderLayout()
-			build(AdvancedGroovyConsoleContentPane.buildContentPaneForSingleProject)
-		}
-		// builder_current_AGCProject = null
-		// println "builder_current_project_panel ${builder_current_project_panel} (${builder_current_project_panel.getClass()})"
-		builder_current_AGCProject.panel = builder_current_project_panel
-		panel(name: "New Project") {
-			
-		}
+		// builder_current_AGCProject = new AGCProject(consoleApp: controller)
+		// build(AdvancedGroovyConsoleContentPane.buildPanelForSingleProject)
 	}
 
 
@@ -136,7 +107,7 @@ if (consoleFrame instanceof java.awt.Window) {
 
 // link in references to the controller
 // controller.outputWindow = outputWindow  // Obsolete logic after tab implementation
-controller.statusLabel = status
+// controller.statusLabel = status
 controller.frame = consoleFrame
 // controller.rowNumAndColNum = rowNumAndColNum  // Obsolete logic after tab implementation
 controller.toolbar = toolbar

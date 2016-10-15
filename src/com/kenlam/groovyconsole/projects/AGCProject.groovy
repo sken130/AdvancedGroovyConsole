@@ -23,6 +23,7 @@ import java.awt.Component
 import javax.swing.*
 import javax.swing.text.Element
 import javax.swing.text.Style
+import java.util.concurrent.atomic.AtomicInteger
 
 public class AGCProject {
 	public final AdvancedGroovyConsole consoleApp
@@ -30,6 +31,9 @@ public class AGCProject {
 	
 	public File loadedConfigFile
 	public final List<File> groovyScriptFiles = []
+	protected final Integer newProjectIndex
+	
+	private static final AtomicInteger NEW_PROJECT_INDEX = new AtomicInteger()
 	
 	Component outputWindow
 	Component blank
@@ -39,7 +43,7 @@ public class AGCProject {
 	JSplitPane splitPane
 	JTextPane inputArea
 	JTextPane outputArea
-	
+	JLabel statusLabel
 	JLabel rowNumAndColNum
 	
 	Element rootElement
@@ -62,6 +66,10 @@ public class AGCProject {
 	
 	public AGCProject(Map params) {
 		this.consoleApp = params.consoleApp
+		this.loadedConfigFile = params.loadedConfigFile  // null for new projectTabs
+		if (!this.loadedConfigFile) {
+			newProjectIndex = NEW_PROJECT_INDEX.getAndIncrement() + 1
+		}
 	}
 	
 	public Action getSaveAction() {
@@ -92,7 +100,7 @@ public class AGCProject {
 	
 	void updateTitle() {
 		File scriptFile = firstGroovyScriptFile()
-		String newTitle = (scriptFile?.name ?: "New Project") + (dirty?' * ':'') + ''
+		String newTitle = (scriptFile?.name ?: "New Project ${newProjectIndex}") + (dirty?' * ':'') + ''
 		consoleApp.projectTabs.setTitleAt(getApplicationTabPaneIndex(), newTitle)
     }
 	

@@ -49,6 +49,7 @@ import javax.swing.text.StyleConstants
 import javax.swing.WindowConstants
 import javax.swing.JSplitPane
 import javax.swing.SwingConstants
+import javax.swing.JPanel
 import java.awt.event.ComponentListener
 import java.awt.event.ComponentEvent
 import javax.swing.event.HyperlinkListener
@@ -67,6 +68,17 @@ import java.awt.dnd.DnDConstants
 
 public class AdvancedGroovyConsoleContentPane {
 
+	public static final Closure buildPanelForSingleProject = {
+		JPanel builder_current_project_panel = panel(name: "New Project") {
+			borderLayout()
+			build(AdvancedGroovyConsoleContentPane.buildContentPaneForSingleProject)
+		}
+		// builder_current_AGCProject = null
+		// println "builder_current_project_panel ${builder_current_project_panel} (${builder_current_project_panel.getClass()})"
+		builder_current_AGCProject.panel = builder_current_project_panel
+		return builder_current_project_panel
+	}
+	
 	public static final Closure buildContentPaneForSingleProject = {
 		def prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
 		def detachedOutputFlag = prefs.getBoolean('detachedOutput', false)
@@ -182,11 +194,12 @@ public class AdvancedGroovyConsoleContentPane {
 		}
 
 		def rowNumAndColNum
+		AGCProject agcProject = builder_current_AGCProject
 		// build(statusBarClass)
 		panel(constraints: BorderLayout.SOUTH) {
 			gridBagLayout()
 			separator(gridwidth:GridBagConstraints.REMAINDER, fill:GridBagConstraints.HORIZONTAL)
-			status = label("Welcome to Groovy ${GroovySystem.version}.",
+			agcProject.statusLabel = label("Welcome to Groovy ${GroovySystem.version}.",
 				weightx:1.0,
 				anchor:GridBagConstraints.WEST,
 				fill:GridBagConstraints.HORIZONTAL,
@@ -195,7 +208,6 @@ public class AdvancedGroovyConsoleContentPane {
 			rowNumAndColNum = label('1:1', insets: [1,3,1,3])
 		}
 		
-		AGCProject agcProject = builder_current_AGCProject
 		ComponentListener componentListener = [
 			componentHidden: {ComponentEvent e -> },
 			componentMoved: {ComponentEvent e -> },
