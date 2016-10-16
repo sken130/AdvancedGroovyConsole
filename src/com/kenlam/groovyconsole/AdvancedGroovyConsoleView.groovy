@@ -101,8 +101,8 @@ container(consoleFrame) {
 		button(interruptAction, text:null)
 	}
 	
-	projectTabs = tabbedPane(tabPlacement: JTabbedPane.TOP){
-		panel(name: "Project 1") {
+	projectTabPanel = tabbedPane(tabPlacement: JTabbedPane.TOP){
+		panel(name: "Script 1") {
 			borderLayout()
 			build(contentPaneClass)
 			// build(statusBarClass)
@@ -118,9 +118,7 @@ container(consoleFrame) {
 				rowNumAndColNum = label('1:1', insets: [1,3,1,3])
 			}
 		}
-		panel(name: "New Project") {
-			
-		}
+		// Depending on project config, will contain other tabs such as FileInteractionModule, DBInteractionModule, TextInteractionModule
 	}
 
 
@@ -148,6 +146,7 @@ controller.statusLabel = status
 controller.frame = consoleFrame
 controller.rowNumAndColNum = rowNumAndColNum
 controller.toolbar = toolbar
+controller.projectTabPanel = projectTabPanel
 
 // link actions
 controller.saveAction = saveAction

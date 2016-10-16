@@ -77,6 +77,8 @@ import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
 import groovy.transform.ThreadInterrupt
 import javax.swing.event.DocumentListener
 
+import com.kenlam.groovyconsole.interactions.InteractionModule
+
 /**
  * Groovy Swing console.
  *
@@ -206,6 +208,9 @@ class AdvancedGroovyConsole extends Console {
     boolean scriptRunning = false
     boolean stackOverFlowError = false
     Action interruptAction
+	
+	JTabbedPane projectTabPanel
+	final List<InteractionModule> interactionModules = []
 	
 	static final File LOG_FILE = new File("logs/templog.txt")
 	
