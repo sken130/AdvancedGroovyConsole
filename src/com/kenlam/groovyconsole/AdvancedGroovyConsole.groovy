@@ -77,7 +77,9 @@ import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
 import groovy.transform.ThreadInterrupt
 import javax.swing.event.DocumentListener
 
+import java.util.concurrent.atomic.AtomicInteger
 import com.kenlam.groovyconsole.interactions.InteractionModule
+import com.kenlam.groovyconsole.interactions.TextInteractionModule
 
 /**
  * Groovy Swing console.
@@ -211,6 +213,9 @@ class AdvancedGroovyConsole extends Console {
 	
 	JTabbedPane projectTabPanel
 	final List<InteractionModule> interactionModules = []
+	private final MapWithDefault<Class, AtomicInteger> interactionModuleCountersByType = [:].withDefault{ Class key ->
+		return new AtomicInteger()
+	}
 	
 	static final File LOG_FILE = new File("logs/templog.txt")
 	
@@ -274,6 +279,12 @@ options:
 
         binding.variables._outputTransforms = OutputTransforms.loadOutputTransforms()
     }
+	
+	public String getNextInteractionModuleName(InteractionModule iModule) {
+		Class iModuleClass = iModule.getClass()
+		AtomicInteger counter = interactionModuleCountersByType[iModuleClass]
+		return iModuleClass.DEFAULT_NAME_PREFIX + (counter.getAndIncrement() + 1)
+	}
 
     void newScript(ClassLoader parent, Binding binding) {
         config = new CompilerConfiguration()
@@ -1073,6 +1084,19 @@ options:
             }
         }
     }
+	
+	void addNewTextInteractionModule(ActionEvent ae) {
+		addNewTextInteractionModule()
+	}
+	void addNewTextInteractionModule() {
+		TextInteractionModule textInteractModule = new TextInteractionModule(this, [:])
+		addNewInteractionModule(textInteractModule)
+	}
+	
+	void addNewInteractionModule(InteractionModule iModule) {
+		interactionModules.push(iModule)
+		iModule.buildUI(this)
+	}
     
     def selectFilename(name = 'Open') {
         def fc = new JFileChooser(currentFileChooserDir)

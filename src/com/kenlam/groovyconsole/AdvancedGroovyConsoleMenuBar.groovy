@@ -85,6 +85,14 @@ menuBar {
         checkBoxMenuItem(detachedOutputAction, selected: controller.detachedOutput)
         checkBoxMenuItem(autoClearOutputAction, selected: controller.autoClearOutput)
     }
+	
+	def addNewTextInteractionAction = action(
+		name: 'Add Text Interaction',
+		closure: controller.&addNewTextInteractionModule
+	)
+	menu(text: 'Project', mnemonic: 'P') {
+		menuItem(addNewTextInteractionAction)
+	}
 
     menu(text: 'History', mnemonic: 'I') {
         menuItem(historyPrevAction)
