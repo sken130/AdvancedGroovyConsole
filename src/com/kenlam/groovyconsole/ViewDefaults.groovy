@@ -38,7 +38,7 @@ import javax.swing.text.StyleConstants
 import javax.swing.text.StyleContext
 import java.util.prefs.Preferences
 
-menuBarClass     = groovy.ui.view.BasicMenuBar
+menuBarClass     = AdvancedGroovyConsoleMenuBar
 contentPaneClass = groovy.ui.view.BasicContentPane
 // toolBarClass     = groovy.ui.view.BasicToolBar
 // statusBarClass   = groovy.ui.view.BasicStatusBar
