@@ -1,5 +1,7 @@
 package com.kenlam.groovyconsole.interactions
 
+import com.kenlam.groovyconsole.AdvancedGroovyConsole
+
 public class InteractionModule {
 	String customName
 	
