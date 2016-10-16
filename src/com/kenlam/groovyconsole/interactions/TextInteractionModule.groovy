@@ -14,7 +14,7 @@ public class TextInteractionModule extends InteractionModule {
 		super(console, params)
 	}
 	
-	public def getValue() {
+	public def getText() {
 		return mainTextArea.getText()
 	}
 	

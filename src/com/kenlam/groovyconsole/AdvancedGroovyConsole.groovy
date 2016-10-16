@@ -981,6 +981,13 @@ options:
         // reload output transforms
         binding.variables._outputTransforms = OutputTransforms.loadOutputTransforms()
     }
+	
+	protected Map prepareInteractionModulesForScript() {
+		Map modulesByName = this.interactionModules.collectEntries{ InteractionModule iModule ->
+			return [(iModule.name): iModule]
+		}
+		return modulesByName
+	}
 
     private void runScriptImpl(boolean selected) {
         if(scriptRunning) {
@@ -1016,6 +1023,8 @@ options:
                 if(beforeExecution) {
                     beforeExecution()
                 }
+				Map modulesByName = prepareInteractionModulesForScript()
+				shell.setVariable("INTERACTION_MODULES", modulesByName)
                 def result
                 if(useScriptClassLoaderForScriptExecution) {
                     ClassLoader savedThreadContextClassLoader = Thread.currentThread().contextClassLoader
