@@ -50,6 +50,9 @@ import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import java.awt.event.FocusListener
 import java.awt.event.FocusEvent
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
+import java.awt.event.MouseAdapter
 import java.util.prefs.Preferences
 import javax.swing.*
 import javax.swing.event.CaretEvent
@@ -1104,7 +1107,34 @@ options:
 	
 	void addNewInteractionModule(InteractionModule iModule) {
 		interactionModules.push(iModule)
-		iModule.buildUI(this)
+		Component buildResult = iModule.buildUI(this)
+		// println "addNewInteractionModule buildResult ${buildResult} (${buildResult.getClass()})"
+		String title = iModule.name
+		projectTabPanel.addTab(null, buildResult)
+		int newTabIndex = projectTabPanel.indexOfComponent(buildResult)
+		// println "newTabIndex ${newTabIndex} (${newTabIndex.getClass()})"
+		
+		def tabComponent = new JLabel(title)
+		// tabComponent.setComponentPopupMenu(popupMenu)
+		
+		tabComponent.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int x = tabComponent.getLocationOnScreen().x - projectTabPanel.getLocationOnScreen().x;
+				int y = tabComponent.getLocationOnScreen().y - projectTabPanel.getLocationOnScreen().y;
+				if(SwingUtilities.isRightMouseButton(e)){
+					JPopupMenu popupMenu = new JPopupMenu()
+					JMenuItem propertiesMenuItem = new JMenuItem("Properties of ${title}...")
+					popupMenu.add(propertiesMenuItem)
+					popupMenu.show(tabComponent, e.getX(), e.getY());
+				} else {
+					MouseEvent me = new MouseEvent((JLabel) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), x, y, e.getLocationOnScreen().x.toInteger(), e.getLocationOnScreen().y.toInteger(), e.getClickCount(), e.isPopupTrigger(), e.getButton());
+					projectTabPanel.getMouseListeners()[0].mousePressed(me);
+					// println("tabComponent mousePressed e=" + e);
+				}
+			}
+		})
+		
+		projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
 	}
     
     def selectFilename(name = 'Open') {

@@ -3,7 +3,10 @@ package com.kenlam.groovyconsole.interactions
 import java.awt.Font
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
 import javax.swing.JTextArea
+import java.awt.BorderLayout
+import javax.swing.JButton
 import groovy.swing.SwingBuilder
+import java.awt.Component
 
 public class TextInteractionModule extends InteractionModule {
 	public static final String DEFAULT_NAME_PREFIX = "Text"
@@ -18,7 +21,7 @@ public class TextInteractionModule extends InteractionModule {
 		return mainTextArea.getText()
 	}
 	
-	protected void doBuildUI(AdvancedGroovyConsole console) {
+	protected Component doBuildUI(AdvancedGroovyConsole console) {
 		SwingBuilder swing = new SwingBuilder()
 		String title = this.name
 		def buildResult = swing.build{
@@ -34,6 +37,7 @@ public class TextInteractionModule extends InteractionModule {
 			}
 		}
 		// println "buildResult ${buildResult} (${buildResult.getClass()})"
-		console.projectTabPanel.addTab(title, buildResult)
+		// console.projectTabPanel.addTab(title, buildResult)
+		return buildResult
 	}
 }

@@ -1,6 +1,7 @@
 package com.kenlam.groovyconsole.interactions
 
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
+import java.awt.Component
 
 public abstract class InteractionModule {
 	String name
@@ -11,13 +12,14 @@ public abstract class InteractionModule {
 		this.name = params.name ?: console.getNextInteractionModuleName(this)
 	}
 	
-	public void buildUI(AdvancedGroovyConsole console) {
+	public Component buildUI(AdvancedGroovyConsole console) {
 		if (uiBuiltAlready) {
 			throw new IllegalStateException("UI already built for ${this}")
 		}
 		uiBuiltAlready = true
-		doBuildUI(console)
+		Component builtUI = doBuildUI(console)
+		return builtUI
 	}
 	
-	protected abstract void doBuildUI(AdvancedGroovyConsole console)
+	protected abstract Component doBuildUI(AdvancedGroovyConsole console)
 }
