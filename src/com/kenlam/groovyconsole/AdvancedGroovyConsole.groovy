@@ -1223,6 +1223,16 @@ options:
 						}
 					] as ActionListener)
 					popupMenu.add(renameMenuItem)
+					JMenuItem removeMenuItem = new JMenuItem("Remove ${iModule.name}...")
+					removeMenuItem.addActionListener([
+						actionPerformed: { ActionEvent actionEvent ->
+							int confirmResult = JOptionPane.showConfirmDialog(frame, "Are you sure to remove ${iModule.name}?", PRODUCT_NAME, JOptionPane.YES_NO_OPTION)
+							if (confirmResult == JOptionPane.YES_OPTION) {
+								this.removeInteractionModule(iModule)
+							}
+						}
+					] as ActionListener)
+					popupMenu.add(removeMenuItem)
 					popupMenu.show(tabComponent, e.getX(), e.getY());
 				} else {
 					MouseEvent me = new MouseEvent((JLabel) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), x, y, e.getLocationOnScreen().x.toInteger(), e.getLocationOnScreen().y.toInteger(), e.getClickCount(), e.isPopupTrigger(), e.getButton());
