@@ -53,6 +53,8 @@ import java.awt.event.FocusEvent
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.awt.event.MouseAdapter
+import java.awt.event.ActionListener
+import java.awt.event.ActionEvent
 import java.util.prefs.Preferences
 import javax.swing.*
 import javax.swing.event.CaretEvent
@@ -84,6 +86,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.kenlam.groovyconsole.interactions.InteractionModule
 import com.kenlam.groovyconsole.interactions.TextInteractionModule
 import com.kenlam.groovyconsole.interactions.FileSystemInteractionModule
+import com.kenlam.common.Looping
 
 /**
  * Groovy Swing console.
@@ -104,6 +107,8 @@ class AdvancedGroovyConsole extends Console {
     static final String DEFAULT_SCRIPT_NAME_START = 'ConsoleScript'
 
     static private prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
+	
+	public static final String PRODUCT_NAME = "Advanced Groovy Console"
 
     // Whether or not std output should be captured to the console
     static boolean captureStdOut = prefs.getBoolean('captureStdOut', true)
@@ -287,7 +292,16 @@ options:
 	public String getNextInteractionModuleName(InteractionModule iModule) {
 		Class iModuleClass = iModule.getClass()
 		AtomicInteger counter = interactionModuleCountersByType[iModuleClass]
-		return iModuleClass.DEFAULT_NAME_PREFIX + (counter.getAndIncrement() + 1)
+		
+		LinkedHashSet existingNames = new LinkedHashSet(interactionModules.collect{ InteractionModule existingIModule -> existingIModule.name })
+		
+		String newName = Looping.loopAndFindFirst({
+			return iModuleClass.DEFAULT_NAME_PREFIX + (counter.getAndIncrement() + 1)
+		}, { String nextName ->
+			return !existingNames.contains(nextName)
+		})
+		
+		return newName
 	}
 
     void newScript(ClassLoader parent, Binding binding) {
@@ -1117,12 +1131,12 @@ options:
 		interactionModules.push(iModule)
 		Component buildResult = iModule.buildUI(this)
 		// println "addNewInteractionModule buildResult ${buildResult} (${buildResult.getClass()})"
-		String title = iModule.name
+		// String title = iModule.name
 		projectTabPanel.addTab(null, buildResult)
 		int newTabIndex = projectTabPanel.indexOfComponent(buildResult)
 		// println "newTabIndex ${newTabIndex} (${newTabIndex.getClass()})"
 		
-		def tabComponent = new JLabel(title)
+		def tabComponent = new JLabel(iModule.name)
 		// tabComponent.setComponentPopupMenu(popupMenu)
 		
 		tabComponent.addMouseListener(new MouseAdapter() {
@@ -1131,8 +1145,19 @@ options:
 				int y = tabComponent.getLocationOnScreen().y - projectTabPanel.getLocationOnScreen().y;
 				if(SwingUtilities.isRightMouseButton(e)){
 					JPopupMenu popupMenu = new JPopupMenu()
-					JMenuItem propertiesMenuItem = new JMenuItem("Properties of ${title}...")
-					popupMenu.add(propertiesMenuItem)
+					JMenuItem renameMenuItem = new JMenuItem("Rename ${iModule.name}...")
+					renameMenuItem.addActionListener([
+						actionPerformed: { ActionEvent actionEvent ->
+							String newName = JOptionPane.showInputDialog(frame, "Please input the new name:", iModule.name)
+							Map validateResult = validateInteractionModuleName(newName)
+							if (validateResult.valid) {
+								iModule.name = newName
+							} else {
+								JOptionPane.showMessageDialog(frame, validateResult.reasonText, PRODUCT_NAME, JOptionPane.ERROR_MESSAGE)
+							}
+						}
+					] as ActionListener)
+					popupMenu.add(renameMenuItem)
 					popupMenu.show(tabComponent, e.getX(), e.getY());
 				} else {
 					MouseEvent me = new MouseEvent((JLabel) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), x, y, e.getLocationOnScreen().x.toInteger(), e.getLocationOnScreen().y.toInteger(), e.getClickCount(), e.isPopupTrigger(), e.getButton());
@@ -1143,6 +1168,15 @@ options:
 		})
 		
 		projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
+		
+		iModule.addNameChangeListener({String newName -> tabComponent.setText(newName) })
+	}
+	
+	public Map validateInteractionModuleName(String name) {
+		if (!name) {
+			return [valid: false, reasonText: "Name cannot be empty"]
+		}
+		return [valid: true]
 	}
     
     def selectFilename(name = 'Open') {
@@ -1206,7 +1240,7 @@ options:
         def version = GroovySystem.getVersion()
         def pane = swing.optionPane()
          // work around GROOVY-1048
-        pane.setMessage('Welcome to the Advanced Groovy Console for evaluating Groovy scripts\nVersion ' + version)
+        pane.setMessage('Welcome to the ${PRODUCT_NAME} for evaluating Groovy scripts\nVersion ' + version)
         def dialog = pane.createDialog(frame, 'About GroovyConsole')
         dialog.show()
     }
