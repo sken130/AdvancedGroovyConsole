@@ -24,19 +24,18 @@ public abstract class InteractionModule {
 	
 	final LinkedHashSet<Closure> nameChangeListeners = new LinkedHashSet()
 	
-	protected boolean uiBuiltAlready = false
+	Component builtUI
 	
 	public InteractionModule (AdvancedGroovyConsole console, Map params) {
 		this.name = params.name ?: console.getNextInteractionModuleName(this)
 	}
 	
 	public Component buildUI(AdvancedGroovyConsole console) {
-		if (uiBuiltAlready) {
+		if (this.builtUI) {
 			throw new IllegalStateException("UI already built for ${this}")
 		}
-		uiBuiltAlready = true
-		Component builtUI = doBuildUI(console)
-		return builtUI
+		this.builtUI = doBuildUI(console)
+		return this.builtUI
 	}
 	
 	protected abstract Component doBuildUI(AdvancedGroovyConsole console)
@@ -46,6 +45,9 @@ public abstract class InteractionModule {
 	}
 	public void removeNameChangeListener(Closure listener) {
 		nameChangeListeners.remove(listener)
+	}
+	public void removeAllNameChangeListeners() {
+		nameChangeListeners.removeAll()
 	}
 	
 	public void setName(String newName) {

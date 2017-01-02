@@ -87,6 +87,14 @@ import com.kenlam.groovyconsole.interactions.InteractionModule
 import com.kenlam.groovyconsole.interactions.TextInteractionModule
 import com.kenlam.groovyconsole.interactions.FileSystemInteractionModule
 import com.kenlam.common.Looping
+import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectConfig
+import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectType
+import com.kenlam.groovyconsole.projects.xmlconfig.InteractionModuleConfig
+import com.kenlam.common.io.FileUtil
+
+import javax.xml.bind.JAXBContext
+import javax.xml.bind.Marshaller
+import javax.xml.bind.Unmarshaller
 
 /**
  * Groovy Swing console.
@@ -710,6 +718,7 @@ options:
                     inputArea.document.remove 0, inputArea.document.length
                     inputArea.document.insertString 0, consoleText, null
                     listeners.each { inputArea.document.addDocumentListener(it) }
+					loadProject()
                     setDirty(false)
                     inputArea.caretPosition = 0
                 }
@@ -729,6 +738,7 @@ options:
         }
 
         scriptFile.write(inputArea.text)
+		saveProject()
         setDirty(false)
         return true
     }
@@ -738,12 +748,67 @@ options:
         scriptFile = selectFilename('Save')
         if (scriptFile != null) {
             scriptFile.write(inputArea.text)
+			saveProject()
             setDirty(false)
             return true
         } else {
             return false
         }
     }
+	
+	File getSingleScriptProjectFile() {
+		String scriptFileNameNoExt = FileUtil.getFileNameWithoutExtension(scriptFile)
+		String projectFileName = scriptFileNameNoExt + ".adcproject"
+		File adcProjectConfigFile = new File(scriptFile.getParentFile(), projectFileName)
+		return adcProjectConfigFile
+	}
+	
+	void loadProject() {
+		removeAllInteractionModules()
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(AGCProjectConfig)
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller()
+		
+		File adcProjectConfigFile = getSingleScriptProjectFile()
+		if (adcProjectConfigFile.exists()) {
+			AGCProjectConfig configRoot = jaxbUnmarshaller.unmarshal(adcProjectConfigFile)
+			// println "configRoot.type ${configRoot.type} (${configRoot.type.getClass()})"
+			if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
+				configRoot.interactionModules.each{ InteractionModuleConfig iModuleConfig ->
+					// println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
+					InteractionModule interactModule = iModuleConfig.type.newInstance(this, [:])
+					interactModule.name = iModuleConfig.name
+					addNewInteractionModule(interactModule)
+				}
+			} else {
+				throw new IllegalArgumentException("Unknown project type of ${configRoot.type}")
+			}
+		}
+	}
+	
+	void saveProject() {
+		JAXBContext ctx = JAXBContext.newInstance(AGCProjectConfig)
+		Marshaller marshaller = ctx.createMarshaller()
+		marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+		
+		File adcProjectConfigFile = getSingleScriptProjectFile()
+		
+		AGCProjectConfig projectConfig = new AGCProjectConfig()
+		projectConfig.groovyScripts = [scriptFile.getName()]
+		projectConfig.type = AGCProjectType.SINGLE_SCRIPT_PROJECT
+		projectConfig.projectVersion = 1
+		
+		this.interactionModules.each{ InteractionModule interactionModule ->
+			InteractionModuleConfig iModuleConfig = new InteractionModuleConfig()
+			iModuleConfig.name = interactionModule.name
+			iModuleConfig.type = interactionModule.getClass()
+			projectConfig.interactionModules.push(iModuleConfig)
+		}
+		
+		adcProjectConfigFile.newWriter("utf-8").withWriter{ selfWriter ->
+			marshaller.marshal(projectConfig, selfWriter)
+		}
+	}
 
     def finishException(Throwable t, boolean executing) {
         if(executing) {
@@ -1170,6 +1235,18 @@ options:
 		projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
 		
 		iModule.addNameChangeListener({String newName -> tabComponent.setText(newName) })
+	}
+	
+	void removeAllInteractionModules() {
+		new ArrayList(this.interactionModules).each{ InteractionModule iModule ->
+			removeInteractionModule(iModule)
+		}
+	}
+	
+	void removeInteractionModule(InteractionModule iModule) {
+		iModule.removeAllNameChangeListeners()
+		projectTabPanel.remove(iModule.builtUI)
+		interactionModules.remove(iModule)
 	}
 	
 	public Map validateInteractionModuleName(String name) {
