@@ -46,6 +46,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import javax.swing.SwingConstants
 import javax.swing.JTabbedPane
+import javax.swing.JOptionPane
 
 switch (UIManager.getSystemLookAndFeelClassName()) {
     case 'com.sun.java.swing.plaf.windows.WindowsLookAndFeel':
@@ -199,9 +200,17 @@ def dtListener =  [
     drop:{DropTargetDropEvent evt  ->
         evt.acceptDrop DnDConstants.ACTION_COPY
         //println "Dropping! ${evt.transferable.getTransferData(DataFlavor.javaFileListFlavor)}"
-        if (controller.askToSaveFile()) {
-            controller.loadScriptFile(evt.transferable.getTransferData(DataFlavor.javaFileListFlavor)[0])
-        }
+		// println "controller.frame ${controller.frame} (${controller.frame.getClass()})"
+		
+		def dialogResult = JOptionPane.showConfirmDialog(controller.frame,
+			'Are you sure that this file is a text file and is not huge?',
+            'GroovyConsole', JOptionPane.YES_NO_OPTION)
+        
+		if (dialogResult == JOptionPane.YES_OPTION) {
+			if (controller.askToSaveFile()) {
+				controller.loadScriptFile(evt.transferable.getTransferData(DataFlavor.javaFileListFlavor)[0])
+			}
+		}
     },
 ] as DropTargetListener
 
