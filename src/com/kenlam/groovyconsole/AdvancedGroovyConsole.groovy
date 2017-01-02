@@ -83,6 +83,7 @@ import javax.swing.event.DocumentListener
 import java.util.concurrent.atomic.AtomicInteger
 import com.kenlam.groovyconsole.interactions.InteractionModule
 import com.kenlam.groovyconsole.interactions.TextInteractionModule
+import com.kenlam.groovyconsole.interactions.FileSystemInteractionModule
 
 /**
  * Groovy Swing console.
@@ -1103,6 +1104,13 @@ options:
 	void addNewTextInteractionModule() {
 		TextInteractionModule textInteractModule = new TextInteractionModule(this, [:])
 		addNewInteractionModule(textInteractModule)
+	}
+	void addNewFileSystemInteractionModule(ActionEvent ae) {
+		addNewFileSystemInteractionModule()
+	}
+	void addNewFileSystemInteractionModule() {
+		FileSystemInteractionModule interactModule = new FileSystemInteractionModule(this, [:])
+		addNewInteractionModule(interactModule)
 	}
 	
 	void addNewInteractionModule(InteractionModule iModule) {

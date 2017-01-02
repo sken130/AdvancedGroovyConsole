@@ -90,8 +90,13 @@ menuBar {
 		name: 'Add Text Interaction',
 		closure: controller.&addNewTextInteractionModule
 	)
+	def addNewFileSystemInteractionAction = action(
+		name: 'Add File System Interaction',
+		closure: controller.&addNewFileSystemInteractionModule
+	)
 	menu(text: 'Project', mnemonic: 'P') {
 		menuItem(addNewTextInteractionAction)
+		menuItem(addNewFileSystemInteractionAction)
 	}
 
     menu(text: 'History', mnemonic: 'I') {

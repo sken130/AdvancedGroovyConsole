@@ -1,0 +1,111 @@
+package com.kenlam.groovyconsole.interactions
+
+import java.awt.Font
+import com.kenlam.groovyconsole.AdvancedGroovyConsole
+import javax.swing.JTextArea
+import java.awt.BorderLayout
+import javax.swing.JButton
+import groovy.swing.SwingBuilder
+import java.awt.Component
+import javax.swing.JList
+import javax.swing.SwingConstants
+import javax.swing.DropMode
+import javax.swing.BorderFactory
+import java.awt.dnd.DropTarget
+import java.awt.dnd.DnDConstants
+import java.awt.dnd.DropTargetDragEvent
+import java.awt.dnd.DropTargetDropEvent
+import java.awt.dnd.DropTargetEvent
+import java.awt.dnd.DropTargetListener
+import java.awt.datatransfer.DataFlavor
+import javax.swing.DefaultListModel
+import java.awt.Dimension
+import java.awt.Color
+import javax.swing.JPanel
+import javax.swing.JLabel
+import javax.swing.BoxLayout
+import javax.swing.JScrollPane
+import javax.swing.Box
+import com.kenlam.groovyconsole.commonui.JListPanel
+
+public class FileSystemInteractionModule extends InteractionModule {
+	public static final String DEFAULT_NAME_PREFIX = "FileSystem"
+	
+	protected JList inputFileList
+	protected JList outputFileList
+	
+	public FileSystemInteractionModule(AdvancedGroovyConsole console, Map params) {
+		super(console, params)
+	}
+	
+	public List<File> getInputFiles() {
+		return inputFileList.getText()
+	}
+	public List<File> getOutputFiles() {
+		return outputFileList.getText()
+	}
+	
+	protected Component doBuildUI(AdvancedGroovyConsole console) {
+		Closure prepareFileList = {
+			DefaultListModel listModel = new DefaultListModel()
+			JList jList = new JList(listModel)
+			jList.dropMode = DropMode.INSERT
+			DropTargetListener dtListener = [
+				dragEnter: { DropTargetDragEvent evt ->
+					if (evt.dropTargetContext.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+						evt.acceptDrag(DnDConstants.ACTION_COPY)
+					} else {
+						evt.rejectDrag()
+					}
+				},
+				dragOver:{DropTargetDragEvent evt -> },
+				dropActionChanged:{DropTargetDragEvent evt -> },
+				dragExit:{DropTargetEvent evt -> },
+				drop: { DropTargetDropEvent dtde ->
+					def t = dtde.transferable
+					if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+						dtde.acceptDrop(DnDConstants.ACTION_REFERENCE)
+						t.getTransferData(DataFlavor.javaFileListFlavor).each{ element ->
+							// println "drop ${element} (${element.getClass()})"
+							listModel.addElement(element)
+						}
+					}
+				}
+			] as DropTargetListener
+			new DropTarget(jList, DnDConstants.ACTION_COPY, dtListener)
+			jList.alignmentX = Component.LEFT_ALIGNMENT
+			jList.maximumSize = new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)
+			// println "jList.maximumSize ${jList.maximumSize} (${jList.maximumSize.getClass()})"
+			
+			return jList
+		}
+		JPanel panel = new JPanel()
+		panel.name = this.name
+		panel.alignmentX = Component.LEFT_ALIGNMENT
+		// new BLDComponent()
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS))
+		// panel.setBorder(BorderFactory.createLineBorder(Color.red))
+		JLabel label_input = new JLabel("Input Files/Directories:")
+		label_input.alignmentX = Component.LEFT_ALIGNMENT
+		JLabel label_output = new JLabel("Output Files/Directories:")
+		label_output.alignmentX = Component.LEFT_ALIGNMENT
+		
+		this.inputFileList = prepareFileList()
+		JListPanel inputFileListPanel = new JListPanel(this.inputFileList)
+		inputFileListPanel.alignmentX = Component.LEFT_ALIGNMENT
+		
+		this.outputFileList = prepareFileList()
+		JListPanel outputFileListPanel = new JListPanel(this.outputFileList)
+		outputFileListPanel.alignmentX = Component.LEFT_ALIGNMENT
+		
+		Box box = Box.createVerticalBox()
+		box.add(label_input)
+		box.add(inputFileListPanel)
+		box.add(label_output)
+		box.add(outputFileListPanel)
+		
+		panel.add(box)
+		
+		return panel
+	}
+}
