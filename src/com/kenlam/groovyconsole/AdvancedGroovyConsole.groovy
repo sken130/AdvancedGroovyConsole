@@ -1263,6 +1263,10 @@ options:
 		if (!name) {
 			return [valid: false, reasonText: "Name cannot be empty"]
 		}
+		LinkedHashSet existingNames = new LinkedHashSet(this.interactionModules*.name)
+		if (existingNames.contains(name)) {
+			return [valid: false, reasonText: "The name \"${name}\" already exists"]
+		}
 		return [valid: true]
 	}
     
