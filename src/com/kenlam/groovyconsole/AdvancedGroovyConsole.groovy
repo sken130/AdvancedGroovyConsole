@@ -43,6 +43,7 @@ import org.codehaus.groovy.control.messages.SimpleMessage
 import java.awt.Component
 import java.awt.EventQueue
 import java.awt.Font
+import java.awt.Point
 import java.awt.Toolkit
 import java.awt.Window
 import java.awt.event.ActionEvent
@@ -227,6 +228,9 @@ class AdvancedGroovyConsole extends Console {
     boolean scriptRunning = false
     boolean stackOverFlowError = false
     Action interruptAction
+	
+	JButton showSnippetMenuTbBtn
+	public static final String INTERACTION_MODULES_VARIABLE = "INTERACTION_MODULES"
 	
 	JTabbedPane projectTabPanel
 	final List<InteractionModule> interactionModules = []
@@ -1107,7 +1111,7 @@ options:
                     beforeExecution()
                 }
 				Map modulesByName = prepareInteractionModulesForScript()
-				shell.setVariable("INTERACTION_MODULES", modulesByName)
+				shell.setVariable(INTERACTION_MODULES_VARIABLE, modulesByName)
                 def result
                 if(useScriptClassLoaderForScriptExecution) {
                     ClassLoader savedThreadContextClassLoader = Thread.currentThread().contextClassLoader
@@ -1268,6 +1272,29 @@ options:
 			return [valid: false, reasonText: "The name \"${name}\" already exists"]
 		}
 		return [valid: true]
+	}
+	
+	public void showSnippetMenu(Map options = [:]){
+		JPopupMenu popupMenu = new JPopupMenu()
+		if (this.interactionModules.size() > 0) {
+			this.interactionModules.each{ InteractionModule iModule ->
+				JMenuItem iModuleMenuItem = new JMenuItem("${iModule.name}")
+				iModuleMenuItem.addActionListener([
+					actionPerformed: { ActionEvent actionEvent ->
+						int cursorPos = inputArea.getCaretPosition()
+						DefaultStyledDocument document = inputArea.document
+						// println "document ${document} (${document.getClass()})"
+						document.insertString(cursorPos, "${INTERACTION_MODULES_VARIABLE}[\"${iModule.name}\"]", null)
+					}
+				] as ActionListener)
+				popupMenu.add(iModuleMenuItem)
+			}
+		} else {
+			JMenuItem dummyMenuItem = new JMenuItem("No Interaction Module")
+			dummyMenuItem.setEnabled(false)
+			popupMenu.add(dummyMenuItem)
+		}
+		popupMenu.show(this.showSnippetMenuTbBtn, 0, this.showSnippetMenuTbBtn.getHeight());
 	}
     
     def selectFilename(name = 'Open') {

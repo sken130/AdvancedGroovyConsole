@@ -43,6 +43,8 @@ import javax.swing.KeyStroke
 
 import java.awt.Toolkit
 
+import java.awt.event.ActionEvent
+
 newFileAction = action(
     name: 'New File',
     closure: controller.&fileNewFile,
@@ -398,4 +400,14 @@ commentAction = action(
     // Ctrl or Command + /
     accelerator: KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
     shortDescription: 'Comment/Uncomment Selected Script'
+)
+
+showSnippetMenuAction = action(
+    name: 'Show Snippet Menu',
+    closure: { ActionEvent evt ->
+		controller.showSnippetMenu()
+	},
+    // mnemonic: 'T',
+    // smallIcon: imageIcon(resource:'icons/cross.png', class:groovy.ui.Console),
+    shortDescription: 'Show Snippet Menu'
 )
