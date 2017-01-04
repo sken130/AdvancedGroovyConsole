@@ -67,6 +67,7 @@ import javax.swing.text.Element
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.Style
 import javax.swing.text.StyleConstants
+import javax.swing.text.DefaultStyledDocument
 import javax.swing.text.html.HTML
 import javax.swing.filechooser.FileFilter
 
