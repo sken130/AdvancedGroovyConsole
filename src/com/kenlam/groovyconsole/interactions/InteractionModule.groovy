@@ -60,7 +60,7 @@ public abstract class InteractionModule {
 		nameChangeListeners.each{ Closure nameChangeListener -> nameChangeListener(this.name) }
 	}
 	
-	public Component buildSnipperMenuItem(Map params) {
+	public Component buildSnippetMenuItem(Map params) {
 		JMenuItem iModuleMenuItem = new JMenuItem("${this.name}")
 		iModuleMenuItem.addActionListener([
 			actionPerformed: { ActionEvent actionEvent ->

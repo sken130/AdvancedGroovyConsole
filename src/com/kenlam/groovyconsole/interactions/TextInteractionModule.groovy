@@ -64,7 +64,7 @@ public class TextInteractionModule extends InteractionModule {
 		return buildResult
 	}
 	
-	public Component buildSnipperMenuItem(Map params) {
+	public Component buildSnippetMenuItem(Map params) {
 		JMenu menu = new JMenu("${this.name}")
 		
 		buildSnippetMenuItemsFromClassMethods(params).each{ JMenuItem methodMenuItem ->

@@ -1279,7 +1279,7 @@ options:
 		JPopupMenu popupMenu = new JPopupMenu()
 		if (this.interactionModules.size() > 0) {
 			this.interactionModules.each{ InteractionModule iModule ->
-				def iModuleMenuItem = iModule.buildSnipperMenuItem([inputArea: inputArea])
+				def iModuleMenuItem = iModule.buildSnippetMenuItem([inputArea: inputArea])
 				popupMenu.add(iModuleMenuItem)
 			}
 		} else {
