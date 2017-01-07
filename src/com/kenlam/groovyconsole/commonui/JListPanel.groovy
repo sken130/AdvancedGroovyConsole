@@ -217,4 +217,8 @@ public class JListPanel extends JPanel {
 		List newSelectedIndices = selectedIndices.collect{ int oldIndex -> oldIndexToNewIndexMap[oldIndex] }.sort()
 		jList.setSelectedIndices((int[])newSelectedIndices)
 	}
+	
+	public List getSelectedValuesList() {
+		return jList.getSelectedValuesList()
+	}
 }

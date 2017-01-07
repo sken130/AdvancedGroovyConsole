@@ -42,23 +42,30 @@ import javax.swing.JLabel
 import javax.swing.BoxLayout
 import javax.swing.JScrollPane
 import javax.swing.Box
+import javax.swing.JMenuItem
+import javax.swing.JMenu
 import com.kenlam.groovyconsole.commonui.JListPanel
+import com.kenlam.groovyconsole.interactions.annotations.SnippetItem
 
 public class FileSystemInteractionModule extends InteractionModule {
 	public static final String DEFAULT_NAME_PREFIX = "FileSystem"
 	
 	protected JList inputFileList
-	protected JList outputFileList
+	protected JListPanel inputFileListPanel
 	
 	public FileSystemInteractionModule(AdvancedGroovyConsole console, Map params) {
 		super(console, params)
 	}
 	
-	public List<File> getInputFiles() {
-		return inputFileList.getText()
+	@SnippetItem
+	public List<File> getAllInputFiles() {
+		DefaultListModel listModel = inputFileList.getModel()
+		return listModel.toArray().toList()
 	}
-	public List<File> getOutputFiles() {
-		return outputFileList.getText()
+	
+	@SnippetItem
+	public List<File> getSelectedInputFiles() {
+		return inputFileListPanel.getSelectedValuesList()
 	}
 	
 	protected Component doBuildUI(AdvancedGroovyConsole console) {
@@ -103,25 +110,26 @@ public class FileSystemInteractionModule extends InteractionModule {
 		// panel.setBorder(BorderFactory.createLineBorder(Color.red))
 		JLabel label_input = new JLabel("Input Files/Directories:")
 		label_input.alignmentX = Component.LEFT_ALIGNMENT
-		JLabel label_output = new JLabel("Output Files/Directories:")
-		label_output.alignmentX = Component.LEFT_ALIGNMENT
 		
 		this.inputFileList = prepareFileList()
-		JListPanel inputFileListPanel = new JListPanel(this.inputFileList)
-		inputFileListPanel.alignmentX = Component.LEFT_ALIGNMENT
-		
-		this.outputFileList = prepareFileList()
-		JListPanel outputFileListPanel = new JListPanel(this.outputFileList)
-		outputFileListPanel.alignmentX = Component.LEFT_ALIGNMENT
+		this.inputFileListPanel = new JListPanel(this.inputFileList)
+		this.inputFileListPanel.alignmentX = Component.LEFT_ALIGNMENT
 		
 		Box box = Box.createVerticalBox()
 		box.add(label_input)
-		box.add(inputFileListPanel)
-		box.add(label_output)
-		box.add(outputFileListPanel)
+		box.add(this.inputFileListPanel)
 		
 		panel.add(box)
 		
 		return panel
+	}
+	
+	public Component buildSnippetMenuItem(Map params) {
+		JMenu menu = new JMenu("${this.name}")
+		
+		buildSnippetMenuItemsFromClassMethods(params).each{ JMenuItem methodMenuItem ->
+			menu.add(methodMenuItem)
+		}
+		return menu
 	}
 }

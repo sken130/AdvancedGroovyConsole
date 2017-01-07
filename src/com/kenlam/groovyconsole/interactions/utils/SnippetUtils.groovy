@@ -26,7 +26,7 @@ public class SnippetUtils {
 			// def snippetItemAnnotation = method.getAnnotation(SnippetItem)
 			String methodSuffix = getMethodSnippetName(method)
 			return [methodSuffix: methodSuffix]
-		}
+		}.sort{ Map config -> config.methodSuffix }
 	}
 	
 	public static String getMethodSnippetName(Method method) {
