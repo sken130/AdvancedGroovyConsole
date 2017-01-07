@@ -21,8 +21,14 @@ import com.kenlam.groovyconsole.AdvancedGroovyConsole
 import javax.swing.JTextArea
 import java.awt.BorderLayout
 import javax.swing.JButton
+import javax.swing.JMenuItem
+import javax.swing.JMenu
 import groovy.swing.SwingBuilder
 import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import com.kenlam.groovyconsole.interactions.annotations.SnippetItem
+import com.kenlam.groovyconsole.interactions.utils.SnippetUtils
 
 public class TextInteractionModule extends InteractionModule {
 	public static final String DEFAULT_NAME_PREFIX = "Text"
@@ -33,6 +39,7 @@ public class TextInteractionModule extends InteractionModule {
 		super(console, params)
 	}
 	
+	@SnippetItem
 	public def getText() {
 		return mainTextArea.getText()
 	}
@@ -55,5 +62,14 @@ public class TextInteractionModule extends InteractionModule {
 		// println "buildResult ${buildResult} (${buildResult.getClass()})"
 		// console.projectTabPanel.addTab(title, buildResult)
 		return buildResult
+	}
+	
+	public Component buildSnipperMenuItem(Map params) {
+		JMenu menu = new JMenu("${this.name}")
+		
+		buildSnippetMenuItemsFromClassMethods(params).each{ JMenuItem methodMenuItem ->
+			menu.add(methodMenuItem)
+		}
+		return menu
 	}
 }

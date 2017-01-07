@@ -101,7 +101,7 @@ container(consoleFrame) {
 		button(runAction, text:null)
 		button(interruptAction, text:null)
 		separator(orientation:SwingConstants.VERTICAL)
-		controller.showSnippetMenuTbBtn = button(showSnippetMenuAction, text: 'Show Snippet Menu')
+		controller.showSnippetMenuTbBtn = button(showSnippetMenuAction, text: 'Snippets')
 	}
 	
 	projectTabPanel = tabbedPane(tabPlacement: JTabbedPane.TOP){

@@ -17,7 +17,12 @@
 package com.kenlam.groovyconsole.interactions
 
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
+import com.kenlam.groovyconsole.interactions.annotations.SnippetItem
+import com.kenlam.groovyconsole.interactions.utils.SnippetUtils
 import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import javax.swing.JMenuItem
 
 public abstract class InteractionModule {
 	String name
@@ -53,5 +58,33 @@ public abstract class InteractionModule {
 	public void setName(String newName) {
 		this.name = newName
 		nameChangeListeners.each{ Closure nameChangeListener -> nameChangeListener(this.name) }
+	}
+	
+	public Component buildSnipperMenuItem(Map params) {
+		JMenuItem iModuleMenuItem = new JMenuItem("${this.name}")
+		iModuleMenuItem.addActionListener([
+			actionPerformed: { ActionEvent actionEvent ->
+				// int cursorPos = params.inputArea.getCaretPosition()
+				// DefaultStyledDocument document = params.inputArea.document
+				// document.insertString(cursorPos, "${AdvancedGroovyConsole.INTERACTION_MODULES_VARIABLE}[\"${this.name}\"]", null)
+				params.inputArea.replaceSelection("${AdvancedGroovyConsole.INTERACTION_MODULES_VARIABLE}[\"${this.name}\"]")
+			}
+		] as ActionListener)
+		return iModuleMenuItem
+	}
+	
+	public List<JMenuItem> buildSnippetMenuItemsFromClassMethods(Map params) {
+		List menuItemConfigsFromMethods = SnippetUtils.getSnippetMenuItemConfigsFromClassMethods(this.getClass())
+		List menuItems = menuItemConfigsFromMethods.collect{ Map methodConfig ->
+			JMenuItem methodMenuItem = new JMenuItem(methodConfig.methodSuffix)
+			methodMenuItem.addActionListener([
+				actionPerformed: { ActionEvent actionEvent ->
+					params.inputArea.replaceSelection("${AdvancedGroovyConsole.INTERACTION_MODULES_VARIABLE}[\"${this.name}\"].${methodConfig.methodSuffix}")
+				}
+			] as ActionListener)
+			
+			return methodMenuItem
+		}
+		return menuItems
 	}
 }

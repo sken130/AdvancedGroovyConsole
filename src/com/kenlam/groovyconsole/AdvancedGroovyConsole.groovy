@@ -1279,16 +1279,7 @@ options:
 		JPopupMenu popupMenu = new JPopupMenu()
 		if (this.interactionModules.size() > 0) {
 			this.interactionModules.each{ InteractionModule iModule ->
-				JMenuItem iModuleMenuItem = new JMenuItem("${iModule.name}")
-				iModuleMenuItem.addActionListener([
-					actionPerformed: { ActionEvent actionEvent ->
-						// int cursorPos = inputArea.getCaretPosition()
-						// DefaultStyledDocument document = inputArea.document
-						// println "document ${document} (${document.getClass()})"
-						// document.insertString(cursorPos, "${INTERACTION_MODULES_VARIABLE}[\"${iModule.name}\"]", null)
-						inputArea.replaceSelection("${INTERACTION_MODULES_VARIABLE}[\"${iModule.name}\"]")
-					}
-				] as ActionListener)
+				def iModuleMenuItem = iModule.buildSnipperMenuItem([inputArea: inputArea])
 				popupMenu.add(iModuleMenuItem)
 			}
 		} else {
