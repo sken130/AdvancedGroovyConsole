@@ -1252,7 +1252,12 @@ options:
 		
 		projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
 		
-		iModule.addNameChangeListener({String newName -> tabComponent.setText(newName) })
+		iModule.addNameChangeListener({ String newName ->
+			tabComponent.setText(newName)
+			setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
+		})
+		
+		setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
 	}
 	
 	void removeAllInteractionModules() {
@@ -1265,6 +1270,7 @@ options:
 		iModule.removeAllNameChangeListeners()
 		projectTabPanel.remove(iModule.builtUI)
 		interactionModules.remove(iModule)
+		setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
 	}
 	
 	public Map validateInteractionModuleName(String name) {
