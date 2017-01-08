@@ -1,6 +1,6 @@
 # Advanced Groovy Console
 
-As titled. The aim of this project is to enhance the built-in Groovy Console provided by the greate Apache Groovy.
+As titled. The aim of this project is to enhance the built-in Groovy Console provided by the great Apache Groovy.
 
 Enhancement list:
 
