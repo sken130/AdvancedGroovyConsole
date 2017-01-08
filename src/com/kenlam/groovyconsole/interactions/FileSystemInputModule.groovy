@@ -48,7 +48,7 @@ import com.kenlam.groovyconsole.commonui.JListPanel
 import com.kenlam.groovyconsole.interactions.annotations.SnippetItem
 
 public class FileSystemInputModule extends InteractionModule {
-	public static final String DEFAULT_NAME_PREFIX = "FileSystem"
+	public static final String DEFAULT_NAME_PREFIX = "FileSystemInput"
 	
 	protected JList inputFileList
 	protected JListPanel inputFileListPanel
