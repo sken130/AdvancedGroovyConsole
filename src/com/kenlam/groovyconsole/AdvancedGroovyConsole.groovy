@@ -674,6 +674,7 @@ options:
     void fileNewFile(EventObject evt = null) {
         if (askToSaveFile()) {
             scriptFile = null
+			removeAllInteractionModules()
             setDirty(false)
             inputArea.text = ''
         }
