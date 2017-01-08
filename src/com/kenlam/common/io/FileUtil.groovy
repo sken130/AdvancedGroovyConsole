@@ -20,6 +20,6 @@ public class FileUtil {
 	public static String getFileNameWithoutExtension(File file) {
 		String fileName = file.getName()
 		int sep = fileName.lastIndexOf('.')
-		return fileName.substring(0, sep)
+		return sep > -1 ? fileName.substring(0, sep) : fileName
 	}
 }
