@@ -47,13 +47,13 @@ import javax.swing.JMenu
 import com.kenlam.groovyconsole.commonui.JListPanel
 import com.kenlam.groovyconsole.interactions.annotations.SnippetItem
 
-public class FileSystemInteractionModule extends InteractionModule {
+public class FileSystemInputModule extends InteractionModule {
 	public static final String DEFAULT_NAME_PREFIX = "FileSystem"
 	
 	protected JList inputFileList
 	protected JListPanel inputFileListPanel
 	
-	public FileSystemInteractionModule(AdvancedGroovyConsole console, Map params) {
+	public FileSystemInputModule(AdvancedGroovyConsole console, Map params) {
 		super(console, params)
 	}
 	

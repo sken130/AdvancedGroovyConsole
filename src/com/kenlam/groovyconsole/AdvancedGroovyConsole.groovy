@@ -87,7 +87,7 @@ import javax.swing.event.DocumentListener
 import java.util.concurrent.atomic.AtomicInteger
 import com.kenlam.groovyconsole.interactions.InteractionModule
 import com.kenlam.groovyconsole.interactions.TextInteractionModule
-import com.kenlam.groovyconsole.interactions.FileSystemInteractionModule
+import com.kenlam.groovyconsole.interactions.FileSystemInputModule
 import com.kenlam.common.Looping
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectConfig
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectType
@@ -781,6 +781,9 @@ options:
 			if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
 				configRoot.interactionModules.each{ InteractionModuleConfig iModuleConfig ->
 					// println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
+					if (iModuleConfig.type == null) {
+						throw new IllegalArgumentException("Wrong type in interactionModule named ${iModuleConfig.name}, please check")
+					}
 					InteractionModule interactModule = iModuleConfig.type.newInstance(this, [:])
 					interactModule.name = iModuleConfig.name
 					addNewInteractionModule(interactModule)
@@ -1193,7 +1196,7 @@ options:
 		addNewFileSystemInteractionModule()
 	}
 	void addNewFileSystemInteractionModule() {
-		FileSystemInteractionModule interactModule = new FileSystemInteractionModule(this, [:])
+		FileSystemInputModule interactModule = new FileSystemInputModule(this, [:])
 		addNewInteractionModule(interactModule)
 	}
 	
