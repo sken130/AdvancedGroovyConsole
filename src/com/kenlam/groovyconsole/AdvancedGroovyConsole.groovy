@@ -763,7 +763,7 @@ options:
 	
 	File getSingleScriptProjectFile() {
 		String scriptFileNameNoExt = FileUtil.getFileNameWithoutExtension(scriptFile)
-		String projectFileName = scriptFileNameNoExt + ".adcproject"
+		String projectFileName = scriptFileNameNoExt + ".agcproject"
 		File adcProjectConfigFile = new File(scriptFile.getParentFile(), projectFileName)
 		return adcProjectConfigFile
 	}
