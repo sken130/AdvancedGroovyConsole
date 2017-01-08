@@ -1311,6 +1311,12 @@ options:
         if (fc.showDialog(frame, name) == JFileChooser.APPROVE_OPTION) {
             currentFileChooserDir = fc.currentDirectory
             Preferences.userNodeForPackage(AdvancedGroovyConsole).put('currentFileChooserDir', currentFileChooserDir.path)
+			if (name == 'Save' && fc.fileFilter == groovyFileFilter) {  // If user haven't changed the file filter to other than Groovy Source Files
+				File selectedFile = fc.selectedFile
+				if (!selectedFile.getName().contains(".")) {
+					fc.selectedFile = new File(selectedFile.getParentFile(), selectedFile.getName() + ".groovy")  // Auto append .groovy file extension if appropriate
+				}
+			}
             return fc.selectedFile
         } else {
             return null
@@ -1603,7 +1609,8 @@ class GroovyFileFilter extends FileFilter {
         if (f.isDirectory()) {
             return true
         }
-        GROOVY_SOURCE_EXTENSIONS.find {it == getExtension(f)} ? true : false
+        def isAccept = GROOVY_SOURCE_EXTENSIONS.find {it == getExtension(f)} ? true : false
+		return isAccept
     }
 
     public String getDescription() {
