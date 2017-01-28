@@ -22,4 +22,9 @@ public class FileUtil {
 		int sep = fileName.lastIndexOf('.')
 		return sep > -1 ? fileName.substring(0, sep) : fileName
 	}
+	public static String getFileExtension(File file) {
+		String fileName = file.getName()
+		int sep = fileName.lastIndexOf('.')
+		return sep > -1 ? fileName.substring(sep + 1, fileName.length()) : ""
+	}
 }
