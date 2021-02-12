@@ -253,6 +253,8 @@ options:
   -cp,-classpath,--classpath <path>    Specify classpath'''
             return
         }
+		
+		println "Using Groovy version: " + GroovySystem.version
 
         // full stack trace should not be logged to the output window - GROOVY-4663
         java.util.logging.Logger.getLogger(StackTraceUtils.STACK_LOG_NAME).useParentHandlers = false
