@@ -169,7 +169,7 @@ class AdvancedGroovyConsole extends Console {
     int maxHistory = 10
 
     // Maximum number of characters to show on console at any time
-    int maxOutputChars = System.getProperty('groovy.console.output.limit','20000') as int
+    int maxOutputChars = System.getProperty('groovy.console.output.limit','100000') as int
 
     // UI
     SwingBuilder swing
