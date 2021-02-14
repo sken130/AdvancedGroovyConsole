@@ -656,10 +656,15 @@ options:
         runThread?.interrupt()
     }
 
-    void exit(EventObject evt = null) {
-        if(askToInterruptScript()) {
-            if (askToSaveFile()) {
-                if (frame instanceof java.awt.Window) {
+	/*
+		To upgrade to Groovy 2.5+, I have to change the return type from void to boolean.
+		And I have to override the exit() method, otherwise I cannot exit the AdvancedGroovyConsole without killing it.
+	 */
+    boolean exit(EventObject evt = null) {
+        if (askToInterruptScript()) {
+            def exit = askToSaveFile()
+            if (exit) {
+                if (frame instanceof Window) {
                     frame.hide()
                     frame.dispose()
                     outputWindow?.dispose()
@@ -671,6 +676,7 @@ options:
                     systemErrorInterceptor.stop()
                 }
             }
+            return exit
         }
     }
 
