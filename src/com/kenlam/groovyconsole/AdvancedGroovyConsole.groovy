@@ -112,7 +112,7 @@ import javax.xml.bind.Unmarshaller
  * @author Paul King
  * @author Andre Steingress
  */
-class AdvancedGroovyConsole extends Console {
+class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, ComponentListener, FocusListener {
 
     static final String DEFAULT_SCRIPT_NAME_START = 'ConsoleScript'
 
@@ -297,7 +297,7 @@ options:
         // listen for Ivy events if Ivy is on the Classpath
         try {
             if (Class.forName('org.apache.ivy.core.event.IvyListener')) {
-                def ivyPluginClass = Class.forName('groovy.ui.ConsoleIvyPlugin')
+                def ivyPluginClass = Class.forName('com.kenlam.groovyconsole.AdvancedGroovyConsoleIvyPlugin')
                 ivyPluginClass.newInstance().addListener(this)
             }
         } catch(ClassNotFoundException ignore) { }
