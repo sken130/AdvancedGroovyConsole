@@ -92,7 +92,9 @@ import com.kenlam.common.Looping
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectConfig
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectType
 import com.kenlam.groovyconsole.projects.xmlconfig.InteractionModuleConfig
+import com.kenlam.groovyconsole.projects.ProjectClassPathsPanel
 import com.kenlam.common.io.FileUtil
+import com.kenlam.debug.BasicStackTraceUncaughtExceptionHandler
 
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
@@ -238,12 +240,25 @@ class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, Compone
 	private final MapWithDefault<Class, AtomicInteger> interactionModuleCountersByType = [:].withDefault{ Class key ->
 		return new AtomicInteger()
 	}
+    
+    ProjectClassPathsPanel projectClassPathsPanel
+    
+    private static PrintStream originalStdout
+    
+    static void saveOriginalStdout() {
+        if (!originalStdout) {
+            originalStdout = System.out
+        }
+    }
 	
 	static final File LOG_FILE = new File("logs/templog.txt")
 	
 	static final String DEFAULT_SANITIZED_STACKTRACES = 'NotGoingToSanitizeAnything'
     
     static void main(args) {
+        saveOriginalStdout()
+        // Thread.setDefaultUncaughtExceptionHandler(new BasicStackTraceUncaughtExceptionHandler())
+
 		System.setProperty('groovy.sanitized.stacktraces', DEFAULT_SANITIZED_STACKTRACES)
 		
         if (args.length == 1 && args[0] == '--help') {
@@ -369,6 +384,13 @@ options:
 
 		// tweak what the stack traces filter out to be fairly broad
         System.setProperty('groovy.sanitized.stacktraces', DEFAULT_SANITIZED_STACKTRACES)
+        
+        // swing.edt{
+            // Thread currentThread = Thread.currentThread()
+            // println "setUncaughtExceptionHandler on thread [${currentThread.getName()}]"
+            // currentThread.setUncaughtExceptionHandler(new BasicStackTraceUncaughtExceptionHandler())
+            // println "currentThread.getUncaughtExceptionHandler = ${currentThread.getUncaughtExceptionHandler()}"
+        // }
 
         // add controller to the swingBuilder bindings
         swing.controller = this
@@ -378,6 +400,10 @@ options:
 
         // create the view
         swing.build(AdvancedGroovyConsoleView)
+        
+        // println "Reinit ProjectClassPathTab - run"
+        removeProjectClassPathTab()
+        createProjectClassPathTab()
 
         bindResults()
 
@@ -443,9 +469,13 @@ options:
 
     // Append a string to the output area
     void appendOutput(String text, AttributeSet style){
-        def doc = outputArea.styledDocument
-        doc.insertString(doc.length, text, style)
-        ensureNoDocLengthOverflow(doc)
+        if (outputArea) {
+            def doc = outputArea.styledDocument
+            doc.insertString(doc.length, text, style)
+            ensureNoDocLengthOverflow(doc)
+        } else {
+            originalStdout.print(text)
+        }
     }
 
     void appendOutput(Window window, AttributeSet style) {
@@ -471,63 +501,75 @@ options:
     }
 
     void appendStacktrace(text) {
-        def doc = outputArea.styledDocument
+        if (outputArea) {
+            def doc = outputArea.styledDocument
 
-        // split lines by new line separator
-        def lines = text.split(/(\n|\r|\r\n|\u0085|\u2028|\u2029)/)
+            // split lines by new line separator
+            def lines = text.split(/(\n|\r|\r\n|\u0085|\u2028|\u2029)/)
 
-        // Java Identifier regex
-        def ji = /([\p{Alnum}_\$][\p{Alnum}_\$]*)/
+            // Java Identifier regex
+            def ji = /([\p{Alnum}_\$][\p{Alnum}_\$]*)/
 
-        // stacktrace line regex
-        def stacktracePattern = /\tat $ji(\.$ji)+\((($ji(\.(java|groovy))?):(\d+))\)/
+            // stacktrace line regex
+            def stacktracePattern = /\tat $ji(\.$ji)+\((($ji(\.(java|groovy))?):(\d+))\)/
 
-        lines.each { line ->
-            int initialLength = doc.length
+            lines.each { line ->
+                int initialLength = doc.length
 
-            def matcher = line =~ stacktracePattern
-            def fileName =  matcher.matches() ? matcher[0][-5] : ''
+                def matcher = line =~ stacktracePattern
+                def fileName =  matcher.matches() ? matcher[0][-5] : ''
 
-            if (fileName == scriptFile?.name || fileName.startsWith(DEFAULT_SCRIPT_NAME_START)) {
-                def fileNameAndLineNumber = matcher[0][-6]
-                def length = fileNameAndLineNumber.length()
-                def index = line.indexOf(fileNameAndLineNumber)
+                if (fileName == scriptFile?.name || fileName.startsWith(DEFAULT_SCRIPT_NAME_START)) {
+                    def fileNameAndLineNumber = matcher[0][-6]
+                    def length = fileNameAndLineNumber.length()
+                    def index = line.indexOf(fileNameAndLineNumber)
 
-                def style = hyperlinkStyle
-                def hrefAttr = new SimpleAttributeSet()
-                // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
-                hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + fileNameAndLineNumber)
-                style.addAttribute(HTML.Tag.A, hrefAttr);
+                    def style = hyperlinkStyle
+                    def hrefAttr = new SimpleAttributeSet()
+                    // don't pass a GString as it won't be coerced to String as addAttribute takes an Object
+                    hrefAttr.addAttribute(HTML.Attribute.HREF, 'file://' + fileNameAndLineNumber)
+                    style.addAttribute(HTML.Tag.A, hrefAttr);
 
-                doc.insertString(initialLength,                     line[0..<index],                    stacktraceStyle)
-                doc.insertString(initialLength + index,             line[index..<(index + length)],     style)
-                doc.insertString(initialLength + index + length,    line[(index + length)..-1] + '\n',  stacktraceStyle)
-            } else {
-                doc.insertString(initialLength, line + '\n', stacktraceStyle)
+                    doc.insertString(initialLength,                     line[0..<index],                    stacktraceStyle)
+                    doc.insertString(initialLength + index,             line[index..<(index + length)],     style)
+                    doc.insertString(initialLength + index + length,    line[(index + length)..-1] + '\n',  stacktraceStyle)
+                } else {
+                    doc.insertString(initialLength, line + '\n', stacktraceStyle)
+                }
             }
-        }
 
-        ensureNoDocLengthOverflow(doc)
+            ensureNoDocLengthOverflow(doc)
+        } else {
+            originalStdout.println(text)
+        }
     }
 
     // Append a string to the output area on a new line
     void appendOutputNl(text, style) {
-        def doc = outputArea.styledDocument
-        def len = doc.length
-        def alreadyNewLine = (len == 0 || doc.getText(len - 1, 1) == '\n')
-        doc.insertString(doc.length, ' \n', style)
-        if (alreadyNewLine) {
-            doc.remove(len, 2) // windows hack to fix (improve?) line spacing
+        if (outputArea) {
+            def doc = outputArea.styledDocument
+            def len = doc.length
+            def alreadyNewLine = (len == 0 || doc.getText(len - 1, 1) == '\n')
+            doc.insertString(doc.length, ' \n', style)
+            if (alreadyNewLine) {
+                doc.remove(len, 2) // windows hack to fix (improve?) line spacing
+            }
+        } else {
+            originalStdout.println()
         }
         appendOutput(text, style)
     }
 
     void appendOutputLines(text, style) {
         appendOutput(text, style)
-        def doc = outputArea.styledDocument
-        def len = doc.length
-        doc.insertString(len, ' \n', style)
-        doc.remove(len, 2) // windows hack to fix (improve?) line spacing
+        if (outputArea) {
+            def doc = outputArea.styledDocument
+            def len = doc.length
+            doc.insertString(len, ' \n', style)
+            doc.remove(len, 2) // windows hack to fix (improve?) line spacing
+        } else {
+            originalStdout.println()
+        }
     }
 
     // Return false if use elected to cancel
@@ -684,6 +726,8 @@ options:
         if (askToSaveFile()) {
             scriptFile = null
 			removeAllInteractionModules()
+            removeProjectClassPathTab()
+            createProjectClassPathTab()
             setDirty(false)
             inputArea.text = ''
         }
@@ -702,6 +746,8 @@ options:
         swing.controller = consoleController
         swing.build(AdvancedGroovyConsoleActions)
         swing.build(AdvancedGroovyConsoleView)
+        removeProjectClassPathTab()
+        createProjectClassPathTab()
         installInterceptor()
         nativeFullScreenForMac(swing.consoleFrame)
         swing.consoleFrame.pack()
@@ -780,6 +826,8 @@ options:
 	
 	void loadProject() {
 		removeAllInteractionModules()
+        removeProjectClassPathTab()
+        createProjectClassPathTab()
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance(AGCProjectConfig)
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller()
@@ -996,40 +1044,64 @@ options:
 		}
 	}
 
-    static boolean notifySystemOut(String str) {
+    // This method signature was copied from Groovy 2.4.x
+    static boolean notifySystemOut(int consoleId, String str) {
         if (!captureStdOut) {
             // Output as normal
             return true
         }
 
-        // Put onto GUI
-        if (EventQueue.isDispatchThread()) {
-            consoleControllers.each {it.appendOutputLines(str, it.outputStyle)}
-        }
-        else {
-            SwingUtilities.invokeLater {
+        Closure doAppend = {
+            AdvancedGroovyConsole console = findConsoleById(consoleId)
+            if (console) {
+                console.appendOutputLines(str, console.outputStyle)
+            } else {
                 consoleControllers.each {it.appendOutputLines(str, it.outputStyle)}
             }
+        }
+
+        // Put onto GUI
+        if (EventQueue.isDispatchThread()) {
+            doAppend.call()
+        }
+        else {
+            SwingUtilities.invokeLater doAppend
         }
         return true
     }
 
-    static boolean notifySystemErr(String str) {
+    // This method signature was copied from Groovy 2.4.x
+    static boolean notifySystemErr(int consoleId, String str) {
         if (!captureStdErr) {
             // Output as normal
             return true
         }
 
-        // Put onto GUI
-        if (EventQueue.isDispatchThread()) {
-            consoleControllers.each {it.appendStacktrace(str)}
-        }
-        else {
-            SwingUtilities.invokeLater {
+        Closure doAppend = {
+            AdvancedGroovyConsole console = findConsoleById(consoleId)
+            if (console) {
+                console.appendStacktrace(str)
+            } else {
                 consoleControllers.each {it.appendStacktrace(str)}
             }
         }
+
+        // Put onto GUI
+        if (EventQueue.isDispatchThread()) {
+            doAppend.call()
+        }
+        else {
+            SwingUtilities.invokeLater doAppend
+        }
         return true
+    }
+
+    int getConsoleId() {
+        return System.identityHashCode(this)
+    }
+
+    private static AdvancedGroovyConsole findConsoleById(int consoleId) {
+        return consoleControllers.find { it.consoleId == consoleId }
     }
 
     // actually run the script
@@ -1119,6 +1191,7 @@ options:
         // Run in a thread outside of EDT, this method is usually called inside the EDT
         runThread = Thread.start {
             try {
+                systemOutInterceptor.setConsoleId(this.getConsoleId())
                 SwingUtilities.invokeLater { showExecutingMessage() }
                 String name = scriptFile?.name ?: (DEFAULT_SCRIPT_NAME_START + scriptNameCounter++)
                 if(beforeExecution) {
@@ -1155,6 +1228,7 @@ options:
                 runThread = null
                 scriptRunning = false
                 interruptAction.enabled = false
+                systemOutInterceptor.removeConsoleId()
             }
         }
     }
@@ -1283,6 +1357,27 @@ options:
 		setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
 	}
 	
+    void createProjectClassPathTab() {
+        // println "createProjectClassPathTab()"
+        if (this.projectClassPathsPanel) {
+            throw new IllegalStateException("this.projectTabPanel already exists for current project")
+        }
+        this.projectClassPathsPanel = new ProjectClassPathsPanel()
+        this.projectClassPathsPanel.doBuildUI()
+        this.projectTabPanel.insertTab(null, null, this.projectClassPathsPanel.builtUI, null, 0)
+        int newTabIndex = this.projectTabPanel.indexOfComponent(this.projectClassPathsPanel.builtUI)
+        def tabComponent = new JLabel("Project ClassPaths")
+        projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
+    }
+    
+    void removeProjectClassPathTab() {
+        // println "removeProjectClassPathTab()"
+        if (this.projectClassPathsPanel) {
+            this.projectTabPanel.remove(this.projectClassPathsPanel.builtUI)
+            this.projectClassPathsPanel = null
+        }
+    }
+    
 	public Map validateInteractionModuleName(String name) {
 		if (!name) {
 			return [valid: false, reasonText: "Name cannot be empty"]
