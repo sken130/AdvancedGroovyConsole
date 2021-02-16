@@ -21,10 +21,15 @@ repositories {
 
 dependencies {
     // Use the latest Groovy version for building this library
-    implementation 'org.codehaus.groovy:groovy-all:2.5.13'
+    implementation 'org.codehaus.groovy:groovy-all:3.0.7'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
+    
+    // Syntax from https://mvnrepository.com/artifact/org.apache.ivy/ivy
+    implementation group: 'org.apache.ivy', name: 'ivy', version: '2.5.0'
+    
+    compile fileTree(dir: 'lib', include: '*.jar')
 
     // Use the awesome Spock testing and specification framework even with Java
     testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'

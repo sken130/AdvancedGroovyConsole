@@ -70,8 +70,7 @@ class BLDComponent extends JComponent
     //and mouseClicked.
     public void mousePressed(MouseEvent e) {
         int width = getWidth();
-        float alignment = (float) (e.getX())
-                / (float) width;
+        float alignment = (float) (e.getX()) / (float) width;
 
         // Round to the nearest 1/10th.
         int tmp = Math.round(alignment * 10.0f);
