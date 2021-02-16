@@ -218,8 +218,8 @@ class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, Compone
     CompilerConfiguration config
     GroovyShell shell
     int scriptNameCounter = 0
-    SystemOutputInterceptor systemOutInterceptor
-    SystemOutputInterceptor systemErrorInterceptor
+    DebugSystemOutputInterceptor systemOutInterceptor
+    DebugSystemOutputInterceptor systemErrorInterceptor
     Thread runThread = null
     Closure beforeExecution
     Closure afterExecution
@@ -440,9 +440,9 @@ options:
 
 
     public void installInterceptor() {
-        systemOutInterceptor = new SystemOutputInterceptor(this.&notifySystemOut, true)
+        systemOutInterceptor = new DebugSystemOutputInterceptor(this.&notifySystemOut, true)
         systemOutInterceptor.start()
-        systemErrorInterceptor = new SystemOutputInterceptor(this.&notifySystemErr, false)
+        systemErrorInterceptor = new DebugSystemOutputInterceptor(this.&notifySystemErr, false)
         systemErrorInterceptor.start()
     }
 
