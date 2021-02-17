@@ -16,17 +16,21 @@ plugins {
 
 repositories {
     // Use JCenter for resolving dependencies.
-    jcenter()
+    // jcenter()    // JCenter will be shut down: https://jeroenmols.com/blog/2021/02/04/migratingjcenter/
+    mavenCentral()
 }
 
 dependencies {
     // Use the latest Groovy version for building this library
     implementation 'org.codehaus.groovy:groovy-all:3.0.7'
+    
+    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
     
-    // Syntax from https://mvnrepository.com/artifact/org.apache.ivy/ivy
+    // https://mvnrepository.com/artifact/org.apache.ivy/ivy
     implementation group: 'org.apache.ivy', name: 'ivy', version: '2.5.0'
     
     compile fileTree(dir: 'lib', include: '*.jar')
