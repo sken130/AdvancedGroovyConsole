@@ -19,43 +19,36 @@ package com.kenlam.groovyconsole.projects
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
 import com.kenlam.groovyconsole.commonui.JListPanel
 
+import javax.swing.JScrollPane
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.event.ActionEvent
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.DefaultListModel
 import javax.swing.JLabel
-import javax.swing.JList
+import javax.swing.JTable
 import javax.swing.JPanel
 import javax.swing.JTextField
 import javax.swing.ListCellRenderer
 
 public class ProjectClassPathsPanel {
-    JList classPathEntryList
+    JTable classPathEntryList
     JPanel classPathEntryListPanel
     
     Component builtUI
     
-    protected JList prepareJList() {
-        DefaultListModel listModel = new DefaultListModel()
-        JList jList = new JList(listModel)
-        
-        jList.alignmentX = Component.LEFT_ALIGNMENT
-        jList.maximumSize = new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)
-        
-        ListCellRenderer cellRenderer = [
-            getListCellRendererComponent: { JList jList_, def element, int index ->
-                JPanel classPathEntryPanel = new JPanel()
-                classPathEntryPanel.setLayout(new BoxLayout(classPathEntryPanel, BoxLayout.LINE_AXIS))
-                classPathEntryPanel.add(new JTextField())
-                classPathEntryPanel.add(new JTextField())
-                return classPathEntryPanel
-            }
-        ] as ListCellRenderer
-        
-        jList.setCellRenderer(cellRenderer)
-        
-        return jList
+    protected JTable prepareJTable() {
+        ProjectClassPathsTableModel tableModel = new ProjectClassPathsTableModel()
+        JTable jTable = new JTable(tableModel)
+
+        // jTable.alignmentX = Component.LEFT_ALIGNMENT
+        // jTable.maximumSize = new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)
+
+        // jTable.setDefaultRenderer(cellRenderer)
+        // jTable.setDefaultEditor()
+
+        return jTable
     }
     protected void doBuildUI(AdvancedGroovyConsole console) {
         
@@ -68,13 +61,13 @@ public class ProjectClassPathsPanel {
         JLabel label_sharedDirectories = new JLabel("Directories (Shared):")
         label_sharedDirectories.alignmentX = Component.LEFT_ALIGNMENT
         
-        this.classPathEntryList = prepareJList()
-        this.classPathEntryListPanel = new JListPanel(this.classPathEntryList)
-        this.classPathEntryListPanel.alignmentX = Component.LEFT_ALIGNMENT
-        
+        this.classPathEntryList = prepareJTable()
+
+        JScrollPane classPathEntryListScrollPane = new JScrollPane(this.classPathEntryList);
+
         Box box = Box.createVerticalBox()
         box.add(label_sharedDirectories)
-        box.add(this.classPathEntryListPanel)
+        box.add(classPathEntryListScrollPane)
         
         panel.add(box)
         
