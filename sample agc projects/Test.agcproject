@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<agcProjectConfig>
+    <groovyScript>Test.groovy</groovyScript>
+    <type>SINGLE_SCRIPT_PROJECT</type>
+    <projectVersion>1</projectVersion>
+    <interactionModule>
+        <name>FileSystem1</name>
+        <type>com.kenlam.groovyconsole.interactions.FileSystemInputModule</type>
+    </interactionModule>
+</agcProjectConfig>
