@@ -35,6 +35,7 @@ public class ModelCentricJTable extends JTable {
         this.modelCentricTableModel = (AbstractModelCentricTableModel) dataModel;
     }
 
+    @Override
     public TableCellRenderer getCellRenderer(int row, int column) {
         TableViewRowIndex viewRowIndex = new TableViewRowIndex(row);
         TableViewColumnIndex viewColumnIndex = new TableViewColumnIndex(column);
