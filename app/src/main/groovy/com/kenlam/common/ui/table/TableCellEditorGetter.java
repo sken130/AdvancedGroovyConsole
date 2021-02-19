@@ -16,10 +16,8 @@
 
 package com.kenlam.common.ui.table;
 
-import com.kenlam.common.TypedInteger;
+import javax.swing.table.TableCellEditor;
 
-public class TableViewColumnIndex extends TypedInteger {
-    public TableViewColumnIndex(Integer value) {
-        super(value);
-    }
+public interface TableCellEditorGetter {
+    public TableCellEditor getCellEditor();
 }

@@ -14,12 +14,17 @@
  *  limitations under the License.
  */
 
-package com.kenlam.common.ui.table;
+package com.kenlam.common.ui
 
-import com.kenlam.common.TypedInteger;
+import javax.swing.Box
+import java.awt.Component
 
-public class TableViewColumnIndex extends TypedInteger {
-    public TableViewColumnIndex(Integer value) {
-        super(value);
+public class UserInterfaceUtils {
+    public static Box boxAndLeftJustify(Component component) {
+        Box b = Box.createHorizontalBox();
+        b.add(component);
+        b.add(Box.createHorizontalGlue());
+
+        return b;
     }
 }
