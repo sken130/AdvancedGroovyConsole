@@ -16,12 +16,18 @@
 
 package com.kenlam.common.ui.table;
 
+import groovy.lang.Tuple2;
+
 import javax.swing.table.AbstractTableModel;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractModelCentricTableModel extends AbstractTableModel {
     protected final List<TableModelColumnMeta> columnMetas;
+
+    protected final Map<Tuple2<TableModelRowIndex, TableModelColumnIndex>, TableModelCellCachedData> cachedDataByCell = new LinkedHashMap<>();
 
     protected AbstractModelCentricTableModel(List<TableModelColumnMeta> columnMetas) {
         this.columnMetas = Collections.unmodifiableList(columnMetas);
@@ -32,11 +38,27 @@ public abstract class AbstractModelCentricTableModel extends AbstractTableModel 
         return columnMetas.size();
     }
 
+    public abstract void doSetValueAt(Object newValue, int rowIndex, int columnIndex);
+
+    @Override
+    public void setValueAt(Object aValue, int row, int column) {
+        doSetValueAt(aValue, row, column);
+        fireTableCellUpdated(row, column);
+    }
+
     public TableModelColumnMeta getColumnMetaByIndex(TableModelColumnIndex columnIndex) {
         return columnMetas.get(columnIndex.Value);
     }
 
     public String getFieldNameByColumnIndex(TableModelColumnIndex columnIndex) {
         return this.getColumnMetaByIndex(columnIndex).getFieldName();
+    }
+
+    public TableModelCellCachedData getCachedDataForCell(TableModelRowIndex rowIndex, TableModelColumnIndex columnIndex) {
+        return cachedDataByCell.get(new Tuple2<>(rowIndex, columnIndex));
+    }
+
+    public void setCachedDataForCell(TableModelRowIndex rowIndex, TableModelColumnIndex columnIndex, TableModelCellCachedData cachedData) {
+        cachedDataByCell.put(new Tuple2<>(rowIndex, columnIndex), cachedData);
     }
 }

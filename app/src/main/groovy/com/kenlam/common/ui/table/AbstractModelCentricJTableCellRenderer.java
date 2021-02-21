@@ -22,27 +22,31 @@ import java.awt.*;
 
 public abstract class AbstractModelCentricJTableCellRenderer implements TableCellRenderer {
 
-    public AbstractModelCentricJTableCellRenderer() {
-
-    }
-
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        // AbstractModelCentricTableModel modelCentricTableModel = (AbstractModelCentricTableModel) table.getModel();
+        AbstractModelCentricTableModel modelCentricTableModel = (AbstractModelCentricTableModel) table.getModel();
         TableViewRowIndex viewRowIndex = new TableViewRowIndex(row);
         TableViewColumnIndex viewColumnIndex = new TableViewColumnIndex(column);
         TableModelColumnIndex modelColumnIndex = new TableModelColumnIndex(table.convertColumnIndexToModel(column));
         TableModelRowIndex modelRowIndex = new TableModelRowIndex(table.convertRowIndexToModel(viewRowIndex.Value));
 
-        Component renderedComponent = this.renderTableCellComponent(table, value, isSelected, hasFocus,
-                modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
+        TableModelColumnMeta columnMeta = modelCentricTableModel.getColumnMetaByIndex(modelColumnIndex);
+
+        JTableRendererReturnValues rendererReturnValues = this.renderTableCellComponent(table, value, isSelected, hasFocus,
+                columnMeta, modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
+        Component renderedComponent = rendererReturnValues.component;
+
+        // TableModelCellCachedData cachedData = new TableModelCellCachedData(modelRowIndex, modelColumnIndex);
+        // cachedData.setPreferredHeight(rendererReturnValues.preferredHeight);
+        // modelCentricTableModel.setCachedDataForCell(modelRowIndex, modelColumnIndex, cachedData);
 
         return renderedComponent;
     }
 
-    public abstract Component renderTableCellComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-                                                       TableModelRowIndex modelRowIndex,
-                                                       TableModelColumnIndex modelColumnIndex,
-                                                       TableViewRowIndex viewRowIndex,
-                                                       TableViewColumnIndex viewColumnIndex);
+    public abstract JTableRendererReturnValues renderTableCellComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                                        TableModelColumnMeta columnMeta,
+                                                                        TableModelRowIndex modelRowIndex,
+                                                                        TableModelColumnIndex modelColumnIndex,
+                                                                        TableViewRowIndex viewRowIndex,
+                                                                        TableViewColumnIndex viewColumnIndex);
 }

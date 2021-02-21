@@ -41,7 +41,9 @@ public class ModelCentricJTable extends JTable {
         TableViewColumnIndex viewColumnIndex = new TableViewColumnIndex(column);
         TableModelColumnIndex modelColumnIndex = new TableModelColumnIndex(this.convertColumnIndexToModel(viewColumnIndex.Value));
         TableModelRowIndex modelRowIndex = new TableModelRowIndex(this.convertRowIndexToModel(viewRowIndex.Value));
-
+        // System.out.println("ModelCentricJTable.getCellRenderer()");
+        // new Throwable().printStackTrace();
+        
         TableModelColumnMeta columnMeta = this.modelCentricTableModel.getColumnMetaByIndex(modelColumnIndex);
 
         TableCellRenderer renderer = columnMeta.getCellRenderer();
