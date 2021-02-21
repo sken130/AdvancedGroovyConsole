@@ -34,7 +34,7 @@ public class JTableUtils {
             int firstRow = event.getFirstRow();
             int lastRow = event.getLastRow();
             IntStream.range(firstRow, lastRow + 1).forEachOrdered((int modelRowIndexInt) -> {
-                commonLog("Table model change event - modelRowIndexInt: " + modelRowIndexInt);
+                // commonLog("Table model change event - modelRowIndexInt: " + modelRowIndexInt);
 
                 TableModelRowIndex modelRowIndex = new TableModelRowIndex(modelRowIndexInt);
 
@@ -56,8 +56,8 @@ public class JTableUtils {
                             JTableRendererReturnValues rendererReturnValues = cellRenderer.renderTableCellComponent(table,
                                     cellValue, false, false,
                                     columnMeta, modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
-                            commonLog("  modelColumnIndexLong: " + modelColumnIndexLong +
-                                    ", rendererReturnValues.preferredHeight: " + rendererReturnValues.preferredHeight);
+                            // commonLog("  modelColumnIndexLong: " + modelColumnIndexLong +
+                            //         ", rendererReturnValues.preferredHeight: " + rendererReturnValues.preferredHeight);
                             return rendererReturnValues.preferredHeight;
                         })
                                 .filter(Objects::nonNull)
