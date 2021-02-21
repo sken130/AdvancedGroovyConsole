@@ -14,37 +14,64 @@
  *  limitations under the License.
  */
 
-package com.kenlam.groovyconsole.projects;
+package com.kenlam.groovyconsole.projects
 
-import javax.swing.table.AbstractTableModel;
 
-public class ProjectClassPathsTableModel extends AbstractTableModel {
-    private final List<Map<String, Object>> columns = [
-            [fieldName: "paths", columnHeader: "Paths"],
-            [fieldName: "wildCards", columnHeader: "WildCards"],
-    ].asImmutable()
+import com.kenlam.common.ui.table.AbstractModelCentricTableModel
+import com.kenlam.common.ui.table.StringListAsTextAreaCellRenderer
+import com.kenlam.common.ui.table.StringListAsTextAreaEditor
+import com.kenlam.common.ui.table.TableModelColumnIndex
+import com.kenlam.common.ui.table.TableModelColumnMeta
+
+public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel {
 
     private final List<ProjectClassPathEntry> projectClasspathEntries = []
+
+    private static List<TableModelColumnMeta> getInitialColumnMetas() {
+        return [
+                new TableModelColumnMeta(
+                        "paths",
+                        "Paths",
+                        () -> {
+                            return new StringListAsTextAreaCellRenderer()
+                        },
+                        () -> {
+                            return new StringListAsTextAreaEditor()
+                        }
+                ),
+                new TableModelColumnMeta(
+                        "wildCards",
+                        "Wildcards",
+                        () -> {
+                            return new StringListAsTextAreaCellRenderer()
+                        },
+                        () -> {
+                            return new StringListAsTextAreaEditor()
+                        }
+                ),
+        ]
+    }
+
+    public ProjectClassPathsTableModel() {
+        super(getInitialColumnMetas())
+    }
 
     @Override
     public int getRowCount() {
         return projectClasspathEntries.size();
     }
 
+
     @Override
-    public int getColumnCount() {
-        return columns.size();
+    String getColumnName(int column) {
+        return columnMetas[column].columnHeader
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        String fieldName = getFieldNameByColumnIndex(columnIndex)
+        String fieldName = getFieldNameByColumnIndex(new TableModelColumnIndex(columnIndex))
         ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
         return projectClassPathEntry[fieldName];
-    }
-
-    public String getFieldNameByColumnIndex(int columnIndex) {
-        return columns[columnIndex].fieldName
     }
 
     @Override
@@ -53,11 +80,15 @@ public class ProjectClassPathsTableModel extends AbstractTableModel {
     }
 
     @Override
-    public void setValueAt(Object newValue, int rowIndex, int columnIndex) {
-        String fieldName = getFieldNameByColumnIndex(columnIndex)
+    public void doSetValueAt(Object newValue, int rowIndex, int columnIndex) {
+        String fieldName = getFieldNameByColumnIndex(new TableModelColumnIndex(columnIndex))
         ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
         projectClassPathEntry[fieldName] = newValue
     }
 
-
+    public void addRowAtEnd(ProjectClassPathEntry entry) {
+        projectClasspathEntries.add(entry)
+        int indexInserted = projectClasspathEntries.indexOf(entry)
+        super.fireTableRowsInserted(indexInserted, indexInserted)
+    }
 }

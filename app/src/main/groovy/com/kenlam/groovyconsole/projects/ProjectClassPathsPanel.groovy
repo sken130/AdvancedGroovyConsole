@@ -16,61 +16,75 @@
 
 package com.kenlam.groovyconsole.projects
 
+import com.kenlam.common.ui.UserInterfaceUtils
+import com.kenlam.common.ui.table.JTableUtils
+import com.kenlam.common.ui.table.ModelCentricJTable
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
-import com.kenlam.groovyconsole.commonui.JListPanel
 
+import javax.swing.JButton
 import javax.swing.JScrollPane
+import javax.swing.JToolBar
 import java.awt.Component
-import java.awt.Dimension
-import java.awt.event.ActionEvent
 import javax.swing.Box
 import javax.swing.BoxLayout
-import javax.swing.DefaultListModel
 import javax.swing.JLabel
 import javax.swing.JTable
 import javax.swing.JPanel
-import javax.swing.JTextField
-import javax.swing.ListCellRenderer
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 
 public class ProjectClassPathsPanel {
-    JTable classPathEntryList
+    ModelCentricJTable classPathEntryList
     JPanel classPathEntryListPanel
-    
+
     Component builtUI
-    
-    protected JTable prepareJTable() {
-        ProjectClassPathsTableModel tableModel = new ProjectClassPathsTableModel()
-        JTable jTable = new JTable(tableModel)
 
-        // jTable.alignmentX = Component.LEFT_ALIGNMENT
-        // jTable.maximumSize = new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)
-
-        // jTable.setDefaultRenderer(cellRenderer)
-        // jTable.setDefaultEditor()
-
-        return jTable
-    }
     protected void doBuildUI(AdvancedGroovyConsole console) {
-        
+
         JPanel panel = new JPanel()
         panel.name = "ClassPaths"
         panel.alignmentX = Component.LEFT_ALIGNMENT
         // new BLDComponent()
         panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS))
         // panel.setBorder(BorderFactory.createLineBorder(Color.red))
-        JLabel label_sharedDirectories = new JLabel("Directories (Shared):")
+        JLabel label_sharedDirectories = new JLabel("Directories or files:")
         label_sharedDirectories.alignmentX = Component.LEFT_ALIGNMENT
-        
-        this.classPathEntryList = prepareJTable()
+
+        Box box = Box.createVerticalBox()
+        // box.alignmentX = Component.LEFT_ALIGNMENT
+
+        box.add(UserInterfaceUtils.boxAndLeftJustify(label_sharedDirectories))
+
+        JToolBar classPathToolbar = new JToolBar()
+        classPathToolbar.alignmentX = Component.LEFT_ALIGNMENT
+        JButton btnAddClassPathEntry = new JButton("Add")
+        classPathToolbar.add(btnAddClassPathEntry)
+        classPathToolbar.setFloatable(false)
+        box.add(UserInterfaceUtils.boxAndLeftJustify(classPathToolbar))
+
+        ProjectClassPathsTableModel classPathsTableModel = new ProjectClassPathsTableModel()
+
+        this.classPathEntryList = new ModelCentricJTable(classPathsTableModel)
+
+        JTableUtils.addAutoHeightListenersToModelCentricJTable(this.classPathEntryList)
+
+        // this.classPathEntryList.setDefaultEditor()
+        // this.classPathEntryList.getColumn(null)
 
         JScrollPane classPathEntryListScrollPane = new JScrollPane(this.classPathEntryList);
 
-        Box box = Box.createVerticalBox()
-        box.add(label_sharedDirectories)
+        btnAddClassPathEntry.addActionListener([
+                actionPerformed: { ActionEvent e ->
+                    classPathsTableModel.addRowAtEnd(new ProjectClassPathEntry())
+                }
+        ] as ActionListener)
+
         box.add(classPathEntryListScrollPane)
-        
+
         panel.add(box)
-        
+
         this.builtUI = panel
     }
+
+
 }
