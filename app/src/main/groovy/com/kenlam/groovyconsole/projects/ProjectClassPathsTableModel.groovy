@@ -16,12 +16,27 @@
 
 package com.kenlam.groovyconsole.projects
 
-
+import com.kenlam.common.ui.table.AbstractModelCentricJTableCellEditor
+import com.kenlam.common.ui.table.AbstractModelCentricJTableCellRenderer
 import com.kenlam.common.ui.table.AbstractModelCentricTableModel
+import com.kenlam.common.ui.table.JTableRendererReturnValues
 import com.kenlam.common.ui.table.StringListAsTextAreaCellRenderer
 import com.kenlam.common.ui.table.StringListAsTextAreaEditor
 import com.kenlam.common.ui.table.TableModelColumnIndex
 import com.kenlam.common.ui.table.TableModelColumnMeta
+import com.kenlam.common.ui.table.TableModelRowIndex
+import com.kenlam.common.ui.table.TableViewColumnIndex
+import com.kenlam.common.ui.table.TableViewRowIndex
+
+import javax.swing.Box
+import javax.swing.JButton
+import javax.swing.JTable
+import javax.swing.table.TableCellEditor
+import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+
+import static com.kenlam.common.SimpleLog.commonLog
 
 public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel {
 
@@ -49,7 +64,67 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                             return new StringListAsTextAreaEditor()
                         }
                 ),
+                new TableModelColumnMeta(
+                        "actions",
+                        "Actions",
+                        () -> {
+                            return new AbstractModelCentricJTableCellRenderer() {
+                                @Override
+                                JTableRendererReturnValues renderTableCellComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                                                    TableModelColumnMeta columnMeta,
+                                                                                    TableModelRowIndex modelRowIndex,
+                                                                                    TableModelColumnIndex modelColumnIndex,
+                                                                                    TableViewRowIndex viewRowIndex,
+                                                                                    TableViewColumnIndex viewColumnIndex) {
+                                    Box box = ProjectClassPathsTableModel.getRowActionButtonsBox(null, table, modelRowIndex)
+                                    JTableRendererReturnValues returnValues = new JTableRendererReturnValues(box, null)
+                                    return returnValues
+                                }
+
+                            }
+                        },
+                        () -> {
+                            return new AbstractModelCentricJTableCellEditor() {
+                                @Override
+                                Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+                                                                      TableModelRowIndex modelRowIndex,
+                                                                      TableModelColumnIndex modelColumnIndex,
+                                                                      TableViewRowIndex viewRowIndex,
+                                                                      TableViewColumnIndex viewColumnIndex) {
+                                    Box box = ProjectClassPathsTableModel.getRowActionButtonsBox(this, table, modelRowIndex)
+                                    return box
+                                }
+
+                                @Override
+                                Object getCellEditorValue() {
+                                    return null
+                                }
+                            }
+                        },
+                        false
+                )
         ]
+    }
+
+    private static Box getRowActionButtonsBox(TableCellEditor editor, JTable table, TableModelRowIndex modelRowIndex) {
+        Box box = Box.createHorizontalBox()
+        JButton deleteButton = new JButton()
+        deleteButton.setText("Delete")
+        deleteButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    void actionPerformed(ActionEvent e) {
+                        // commonLog("delete button clicked for row ${modelRowIndex}")
+                        if (editor) {
+                            boolean editingIsStopped = editor.stopCellEditing()
+                        }
+                        ProjectClassPathsTableModel model = table.getModel()
+                        model.removeRow(modelRowIndex.Value)
+                    }
+                }
+        )
+        box.add(deleteButton)
+        return box
     }
 
     public ProjectClassPathsTableModel() {
@@ -69,9 +144,20 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        String fieldName = getFieldNameByColumnIndex(new TableModelColumnIndex(columnIndex))
-        ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
-        return projectClassPathEntry[fieldName];
+        TableModelColumnMeta columnMeta = this.getColumnMetaByIndex(new TableModelColumnIndex(columnIndex));
+        // commonLog("Model.getValueAt(${rowIndex}, ${columnIndex}) - projectClasspathEntries:\n" + projectClasspathEntries)
+        try {
+            if (columnMeta.isHasData()) {
+                String fieldName = columnMeta.getFieldName()
+                ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
+                return projectClassPathEntry[fieldName];
+            } else {
+                return null
+            }
+        } catch (ex) {
+            commonLog("Model.getValueAt(${rowIndex}, ${columnIndex}) has exception.")
+            throw ex
+        }
     }
 
     @Override
@@ -81,14 +167,23 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
 
     @Override
     public void doSetValueAt(Object newValue, int rowIndex, int columnIndex) {
-        String fieldName = getFieldNameByColumnIndex(new TableModelColumnIndex(columnIndex))
-        ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
-        projectClassPathEntry[fieldName] = newValue
+        TableModelColumnMeta columnMeta = this.getColumnMetaByIndex(new TableModelColumnIndex(columnIndex));
+        if (columnMeta.isHasData()) {
+            String fieldName = getFieldNameByColumnIndex(new TableModelColumnIndex(columnIndex))
+            ProjectClassPathEntry projectClassPathEntry = projectClasspathEntries[rowIndex]
+            projectClassPathEntry[fieldName] = newValue
+        }
     }
 
     public void addRowAtEnd(ProjectClassPathEntry entry) {
         projectClasspathEntries.add(entry)
         int indexInserted = projectClasspathEntries.indexOf(entry)
         super.fireTableRowsInserted(indexInserted, indexInserted)
+    }
+
+    public void removeRow(int modelRowIndex) {
+        projectClasspathEntries.remove(modelRowIndex)
+        // commonLog("projectClasspathEntries.remove(${modelRowIndex})")
+        fireTableRowsDeleted(modelRowIndex, modelRowIndex);
     }
 }

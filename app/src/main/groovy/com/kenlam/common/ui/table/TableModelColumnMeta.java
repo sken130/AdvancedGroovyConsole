@@ -26,13 +26,23 @@ public class TableModelColumnMeta {
     private final TableCellRendererGetter cellRendererGetter;
     private final TableCellEditorGetter cellEditorGetter;
 
+    private final boolean hasData;
+
     public TableModelColumnMeta(String fieldName, String columnHeader,
                                 TableCellRendererGetter cellRendererGetter,
                                 TableCellEditorGetter cellEditorGetter) {
+        this(fieldName, columnHeader, cellRendererGetter, cellEditorGetter, true);
+    }
+
+    public TableModelColumnMeta(String fieldName, String columnHeader,
+                                TableCellRendererGetter cellRendererGetter,
+                                TableCellEditorGetter cellEditorGetter,
+                                boolean hasData) {
         this.fieldName = fieldName;
         this.columnHeader = columnHeader;
         this.cellRendererGetter = cellRendererGetter;
         this.cellEditorGetter = cellEditorGetter;
+        this.hasData = hasData;
     }
 
     public String getFieldName() {
@@ -57,5 +67,9 @@ public class TableModelColumnMeta {
 
     public TableCellEditorGetter getCellEditorGetter() {
         return cellEditorGetter;
+    }
+
+    public boolean isHasData() {
+        return hasData;
     }
 }

@@ -33,43 +33,46 @@ public class JTableUtils {
         model.addTableModelListener((TableModelEvent event) -> {
             int firstRow = event.getFirstRow();
             int lastRow = event.getLastRow();
-            IntStream.range(firstRow, lastRow + 1).forEachOrdered((int modelRowIndexInt) -> {
-                // commonLog("Table model change event - modelRowIndexInt: " + modelRowIndexInt);
+            // commonLog("TableModelEvent - firstRow " + firstRow + ", lastRow " + lastRow + ", type " + event.getType());
+            if (event.getType() != TableModelEvent.DELETE) {
+                IntStream.range(firstRow, lastRow + 1).forEachOrdered((int modelRowIndexInt) -> {
+                    // commonLog("Table model change event - modelRowIndexInt: " + modelRowIndexInt);
 
-                TableModelRowIndex modelRowIndex = new TableModelRowIndex(modelRowIndexInt);
+                    TableModelRowIndex modelRowIndex = new TableModelRowIndex(modelRowIndexInt);
 
-                TableViewRowIndex viewRowIndex = new TableViewRowIndex(table.convertRowIndexToView(modelRowIndexInt));
+                    TableViewRowIndex viewRowIndex = new TableViewRowIndex(table.convertRowIndexToView(modelRowIndexInt));
 
-                List<TableModelColumnMeta> columnMetas = table.modelCentricTableModel.columnMetas;
+                    List<TableModelColumnMeta> columnMetas = table.modelCentricTableModel.columnMetas;
 
                 /*
                     Call the renderer for each cell to get their preferred heights.
                     The renderers must be subclasses of AbstractModelCentricJTableCellRenderer to support that.
                     Note that this won't actually do the rendering.
                  */
-                List<Integer> allPreferredHeights =
-                        Streams.mapWithIndex(columnMetas.stream(), (TableModelColumnMeta columnMeta, long modelColumnIndexLong) -> {
-                            TableModelColumnIndex modelColumnIndex = new TableModelColumnIndex((int) modelColumnIndexLong);
-                            TableViewColumnIndex viewColumnIndex = new TableViewColumnIndex(table.convertColumnIndexToView(modelColumnIndex.Value));
-                            AbstractModelCentricJTableCellRenderer cellRenderer = (AbstractModelCentricJTableCellRenderer) columnMeta.getCellRenderer();
-                            Object cellValue = model.getValueAt(modelRowIndexInt, (int) modelColumnIndexLong);
-                            JTableRendererReturnValues rendererReturnValues = cellRenderer.renderTableCellComponent(table,
-                                    cellValue, false, false,
-                                    columnMeta, modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
-                            // commonLog("  modelColumnIndexLong: " + modelColumnIndexLong +
-                            //         ", rendererReturnValues.preferredHeight: " + rendererReturnValues.preferredHeight);
-                            return rendererReturnValues.preferredHeight;
-                        })
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toList());
+                    List<Integer> allPreferredHeights =
+                            Streams.mapWithIndex(columnMetas.stream(), (TableModelColumnMeta columnMeta, long modelColumnIndexLong) -> {
+                                TableModelColumnIndex modelColumnIndex = new TableModelColumnIndex((int) modelColumnIndexLong);
+                                TableViewColumnIndex viewColumnIndex = new TableViewColumnIndex(table.convertColumnIndexToView(modelColumnIndex.Value));
+                                AbstractModelCentricJTableCellRenderer cellRenderer = (AbstractModelCentricJTableCellRenderer) columnMeta.getCellRenderer();
+                                Object cellValue = model.getValueAt(modelRowIndexInt, (int) modelColumnIndexLong);
+                                JTableRendererReturnValues rendererReturnValues = cellRenderer.renderTableCellComponent(table,
+                                        cellValue, false, false,
+                                        columnMeta, modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
+                                // commonLog("  modelColumnIndexLong: " + modelColumnIndexLong +
+                                //         ", rendererReturnValues.preferredHeight: " + rendererReturnValues.preferredHeight);
+                                return rendererReturnValues.preferredHeight;
+                            })
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.toList());
 
-                if (allPreferredHeights.size() > 0) {
-                    Optional<Integer> maxPreferredHeightOption = allPreferredHeights.stream().max(Comparator.naturalOrder());
-                    Integer maxPreferredHeight = maxPreferredHeightOption.get();  // Should always exist, after filtering null and checking for list emptiness
-                    // commonLog("  Going to setRowHeight modelRowIndexInt: " + modelRowIndexInt + ", maxPreferredHeight: " + maxPreferredHeight);
-                    table.setRowHeight(modelRowIndexInt, maxPreferredHeight);
-                }
-            });
+                    if (allPreferredHeights.size() > 0) {
+                        Optional<Integer> maxPreferredHeightOption = allPreferredHeights.stream().max(Comparator.naturalOrder());
+                        Integer maxPreferredHeight = maxPreferredHeightOption.get();  // Should always exist, after filtering null and checking for list emptiness
+                        // commonLog("  Going to setRowHeight modelRowIndexInt: " + modelRowIndexInt + ", maxPreferredHeight: " + maxPreferredHeight);
+                        table.setRowHeight(modelRowIndexInt, maxPreferredHeight);
+                    }
+                });
+            }
         });
     }
 }
