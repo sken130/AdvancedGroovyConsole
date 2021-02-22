@@ -23,13 +23,16 @@ import com.kenlam.groovyconsole.AdvancedGroovyConsole
 
 import javax.swing.JButton
 import javax.swing.JScrollPane
+import javax.swing.JSeparator
 import javax.swing.JToolBar
+import javax.swing.SwingConstants
 import java.awt.Component
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JTable
 import javax.swing.JPanel
+import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 
@@ -57,6 +60,9 @@ public class ProjectClassPathsPanel {
 
         JToolBar classPathToolbar = new JToolBar()
         classPathToolbar.alignmentX = Component.LEFT_ALIGNMENT
+        JButton btnApplyAndSave = new JButton("Apply and Save")
+        classPathToolbar.add(btnApplyAndSave)
+        classPathToolbar.addSeparator(new Dimension(5, btnApplyAndSave.getPreferredSize().getHeight().toInteger()))
         JButton btnAddClassPathEntry = new JButton("Add")
         classPathToolbar.add(btnAddClassPathEntry)
         classPathToolbar.setFloatable(false)
