@@ -27,6 +27,7 @@ import com.kenlam.common.ui.table.TableModelColumnMeta
 import com.kenlam.common.ui.table.TableModelRowIndex
 import com.kenlam.common.ui.table.TableViewColumnIndex
 import com.kenlam.common.ui.table.TableViewRowIndex
+import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
 
 import javax.swing.Box
 import javax.swing.JButton
@@ -40,7 +41,7 @@ import static com.kenlam.common.SimpleLog.commonLog
 
 public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel {
 
-    private final List<ProjectClassPathEntry> projectClasspathEntries = []
+    protected final List<ProjectClassPathEntry> projectClasspathEntries = []
 
     private static List<TableModelColumnMeta> getInitialColumnMetas() {
         return [

@@ -20,17 +20,15 @@ import com.kenlam.common.ui.UserInterfaceUtils
 import com.kenlam.common.ui.table.JTableUtils
 import com.kenlam.common.ui.table.ModelCentricJTable
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
+import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
 
 import javax.swing.JButton
 import javax.swing.JScrollPane
-import javax.swing.JSeparator
 import javax.swing.JToolBar
-import javax.swing.SwingConstants
 import java.awt.Component
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JLabel
-import javax.swing.JTable
 import javax.swing.JPanel
 import java.awt.Dimension
 import java.awt.event.ActionEvent
@@ -41,6 +39,9 @@ public class ProjectClassPathsPanel {
     JPanel classPathEntryListPanel
 
     Component builtUI
+    protected ProjectClassPathsTableModel classPathsTableModel
+
+    protected final List<Closure> applyAndSaveListeners = []
 
     protected void doBuildUI(AdvancedGroovyConsole console) {
 
@@ -61,6 +62,13 @@ public class ProjectClassPathsPanel {
         JToolBar classPathToolbar = new JToolBar()
         classPathToolbar.alignmentX = Component.LEFT_ALIGNMENT
         JButton btnApplyAndSave = new JButton("Apply and Save")
+        btnApplyAndSave.addActionListener([
+                actionPerformed: { ActionEvent e ->
+                    applyAndSaveListeners.each { listener ->
+                        listener()
+                    }
+                }
+        ] as ActionListener)
         classPathToolbar.add(btnApplyAndSave)
         classPathToolbar.addSeparator(new Dimension(5, btnApplyAndSave.getPreferredSize().getHeight().toInteger()))
         JButton btnAddClassPathEntry = new JButton("Add")
@@ -68,7 +76,7 @@ public class ProjectClassPathsPanel {
         classPathToolbar.setFloatable(false)
         box.add(UserInterfaceUtils.boxAndLeftJustify(classPathToolbar))
 
-        ProjectClassPathsTableModel classPathsTableModel = new ProjectClassPathsTableModel()
+        classPathsTableModel = new ProjectClassPathsTableModel()
 
         this.classPathEntryList = new ModelCentricJTable(classPathsTableModel)
 
@@ -92,5 +100,12 @@ public class ProjectClassPathsPanel {
         this.builtUI = panel
     }
 
+    public void addApplyAndSaveListener(Closure listener) {
+        applyAndSaveListeners.push(listener)
+    }
+
+    public List<ProjectClassPathEntry> getCurrentClassPathEntries() {
+        return classPathsTableModel.projectClasspathEntries
+    }
 
 }

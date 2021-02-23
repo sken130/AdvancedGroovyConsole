@@ -13,10 +13,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
-package com.kenlam.groovyconsole.projects
 
+package com.kenlam.groovyconsole.projects.xmlconfig
+
+import javax.xml.bind.annotation.XmlAccessType
+import javax.xml.bind.annotation.XmlAccessorType
+import javax.xml.bind.annotation.XmlElement
+import javax.xml.bind.annotation.XmlRootElement
+import javax.xml.bind.annotation.XmlType
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType
 public class ProjectClassPathEntry {
-    List<String> paths
-    List<String> wildCards
+    @XmlElement(name = "paths")
+    List<String> paths = []
+
+    @XmlElement(name = "wildCards")
+    List<String> wildCards = []
 }

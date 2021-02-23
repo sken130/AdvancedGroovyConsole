@@ -23,16 +23,19 @@ repositories {
 dependencies {
     // Use the latest Groovy version for building this library
     implementation 'org.codehaus.groovy:groovy-all:3.0.7'
-    
+
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+
+    // https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.3'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
-    
+
     // https://mvnrepository.com/artifact/org.apache.ivy/ivy
     implementation group: 'org.apache.ivy', name: 'ivy', version: '2.5.0'
-    
+
     compile fileTree(dir: 'lib', include: '*.jar')
 
     // Use the awesome Spock testing and specification framework even with Java

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Ken Lam
+ *  Copyright 2021 Ken Lam
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,26 +16,16 @@
 
 package com.kenlam.groovyconsole.projects.xmlconfig
 
-import javax.xml.bind.annotation.XmlType
-import javax.xml.bind.annotation.XmlElement
-import javax.xml.bind.annotation.XmlRootElement
 import javax.xml.bind.annotation.XmlAccessType
 import javax.xml.bind.annotation.XmlAccessorType
+import javax.xml.bind.annotation.XmlElement
+import javax.xml.bind.annotation.XmlRootElement
+import javax.xml.bind.annotation.XmlType
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType
-public class AGCProjectConfig {
-	@XmlElement(name = "groovyScript")
-	public List<String> groovyScripts
-	@XmlElement
-	public AGCProjectType type
-	@XmlElement
-	public int projectVersion  // Not program version
-	
-	@XmlElement(name = "interactionModule")
-	public List<InteractionModuleConfig> interactionModules = []
-
-	@XmlElement(name = "projectClassPathSettings")
-	public ProjectClassPathSettings projectClassPathSettings
+public class ProjectClassPathSettings {
+    @XmlElement(name = "classPathEntries")
+    List<ProjectClassPathEntry> classPathEntries = []
 }
