@@ -1385,7 +1385,11 @@ options:
 
         projectClassPathsPanel.addApplyAndSaveListener {
             // commonLog("projectClassPathsPanel.applyAndSaveListener")
-            this.saveProject()
+            if (scriptFile == null) {
+                return fileSaveAs(null)
+            } else {
+                this.saveProject()
+            }
         }
     }
 
