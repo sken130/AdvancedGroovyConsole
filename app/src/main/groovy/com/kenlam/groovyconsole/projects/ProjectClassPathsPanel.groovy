@@ -108,4 +108,10 @@ public class ProjectClassPathsPanel {
         return classPathsTableModel.projectClasspathEntries
     }
 
+    public void setCurrentClassPathEntries(List<ProjectClassPathEntry> classPathEntries) {
+        classPathsTableModel.projectClasspathEntries.clear()
+        classPathsTableModel.projectClasspathEntries.addAll(classPathEntries)
+
+    }
+
 }

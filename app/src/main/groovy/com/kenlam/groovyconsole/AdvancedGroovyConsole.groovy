@@ -844,6 +844,10 @@ options:
             AGCProjectConfig configRoot = jaxbUnmarshaller.unmarshal(adcProjectConfigFile)
             // println "configRoot.type ${configRoot.type} (${configRoot.type.getClass()})"
             if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
+                ProjectClassPathSettings projectClassPathSettings = configRoot.projectClassPathSettings
+                List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings.classPathEntries ?: []
+                this.projectClassPathsPanel.setCurrentClassPathEntries(classPathEntries)
+
                 configRoot.interactionModules.each { InteractionModuleConfig iModuleConfig ->
                     // println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
                     if (iModuleConfig.type == null) {
