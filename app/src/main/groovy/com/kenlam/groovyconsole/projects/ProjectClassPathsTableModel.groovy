@@ -117,7 +117,8 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                     void actionPerformed(ActionEvent e) {
                         // commonLog("delete button clicked for row ${modelRowIndex}")
                         if (editor) {
-                            boolean editingIsStopped = editor.stopCellEditing()
+                            // commonLog("cancelCellEditing for row ${modelRowIndex}")
+                            editor.cancelCellEditing()
                         }
                         ProjectClassPathsTableModel model = table.getModel()
                         model.removeRow(modelRowIndex.Value)
