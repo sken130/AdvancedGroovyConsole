@@ -45,16 +45,13 @@ import org.codehaus.groovy.control.messages.SimpleMessage
 import java.awt.Component
 import java.awt.EventQueue
 import java.awt.Font
-import java.awt.Point
 import java.awt.Toolkit
 import java.awt.Window
-import java.awt.event.ActionEvent
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import java.awt.event.FocusListener
 import java.awt.event.FocusEvent
 import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import java.awt.event.MouseAdapter
 import java.awt.event.ActionListener
 import java.awt.event.ActionEvent
@@ -69,7 +66,6 @@ import javax.swing.text.Element
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.Style
 import javax.swing.text.StyleConstants
-import javax.swing.text.DefaultStyledDocument
 import javax.swing.text.html.HTML
 import javax.swing.filechooser.FileFilter
 
@@ -94,9 +90,8 @@ import com.kenlam.common.Looping
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectConfig
 import com.kenlam.groovyconsole.projects.xmlconfig.AGCProjectType
 import com.kenlam.groovyconsole.projects.xmlconfig.InteractionModuleConfig
-import com.kenlam.groovyconsole.projects.ProjectClassPathsPanel
+import com.kenlam.groovyconsole.projects.ProjectClassPathsManager
 import com.kenlam.common.io.FileUtil
-import com.kenlam.debug.BasicStackTraceUncaughtExceptionHandler
 
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
@@ -244,8 +239,11 @@ class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, Compone
     private final MapWithDefault<Class, AtomicInteger> interactionModuleCountersByType = [:].withDefault { Class key ->
         return new AtomicInteger()
     }
+    
+    JPanel scriptPanel1
 
-    ProjectClassPathsPanel projectClassPathsPanel
+    JPanel projectClassPathsPanel
+    ProjectClassPathsManager projectClassPathsManager = new ProjectClassPathsManager()
 
     private static PrintStream originalStdout
 
@@ -273,8 +271,8 @@ options:
             return
         }
 
-        println "Using Groovy version: " + GroovySystem.version
-        println "Using Java version: " + System.getProperty("java.version")
+        commonLog "Using Groovy version: " + GroovySystem.version
+        commonLog "Using Java version: " + System.getProperty("java.version")
 
         // full stack trace should not be logged to the output window - GROOVY-4663
         java.util.logging.Logger.getLogger(StackTraceUtils.STACK_LOG_NAME).useParentHandlers = false
@@ -323,6 +321,20 @@ options:
         }
 
         binding.variables._outputTransforms = OutputTransforms.loadOutputTransforms()
+        
+        initProjectClassPathsManager()
+    }
+    
+    protected void initProjectClassPathsManager() {
+        // commonLog("projectClassPathsPanel.addApplyAndSaveListener")
+        projectClassPathsManager.addApplyAndSaveListener {
+            // commonLog("projectClassPathsPanel.applyAndSaveListener")
+            if (scriptFile == null) {
+                return fileSaveAs(null)
+            } else {
+                this.saveProject()
+            }
+        }
     }
 
     public String getNextInteractionModuleName(InteractionModule iModule) {
@@ -407,6 +419,8 @@ options:
 
         // create the view
         swing.build(AdvancedGroovyConsoleView)
+        
+        this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
 
         // println "Reinit ProjectClassPathTab - run"
         removeProjectClassPathTab()
@@ -795,6 +809,11 @@ options:
                 // GROOVY-3684: focus away and then back to inputArea ensures caret blinks
                 swing.doLater outputArea.&requestFocusInWindow
                 swing.doLater inputArea.&requestFocusInWindow
+                
+                // SwingUtilities.invokeLater{  // If switch tab immediately, the event dispatcher thread will loop infinitely, I don't know why.
+                    // commonLog "this.projectTabPanel.setSelectedComponent(this.scriptPanel1)"
+                    // this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
+                // }
             }
         }
     }
@@ -846,7 +865,7 @@ options:
             if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
                 ProjectClassPathSettings projectClassPathSettings = configRoot.projectClassPathSettings
                 List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings.classPathEntries ?: []
-                this.projectClassPathsPanel.setCurrentClassPathEntries(classPathEntries)
+                this.projectClassPathsManager.setCurrentClassPathEntries(classPathEntries)
 
                 configRoot.interactionModules.each { InteractionModuleConfig iModuleConfig ->
                     // println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
@@ -875,7 +894,7 @@ options:
         projectConfig.type = AGCProjectType.SINGLE_SCRIPT_PROJECT
         projectConfig.projectVersion = 1
 
-        List<ProjectClassPathEntry> projectClassPathEntries = this.projectClassPathsPanel.getCurrentClassPathEntries()
+        List<ProjectClassPathEntry> projectClassPathEntries = this.projectClassPathsManager.getCurrentClassPathEntries()
         ProjectClassPathSettings projectClassPathSettings = new ProjectClassPathSettings()
         projectClassPathSettings.classPathEntries = projectClassPathEntries
 
@@ -1376,33 +1395,15 @@ options:
     }
 
     void createProjectClassPathTab() {
-        // println "createProjectClassPathTab()"
-        if (this.projectClassPathsPanel) {
-            throw new IllegalStateException("this.projectTabPanel already exists for current project")
-        }
-        this.projectClassPathsPanel = new ProjectClassPathsPanel()
-        this.projectClassPathsPanel.doBuildUI()
-        this.projectTabPanel.insertTab(null, null, this.projectClassPathsPanel.builtUI, null, 0)
-        int newTabIndex = this.projectTabPanel.indexOfComponent(this.projectClassPathsPanel.builtUI)
-        def tabComponent = new JLabel("Project ClassPaths")
-        projectTabPanel.setTabComponentAt(newTabIndex, tabComponent)
-
-        projectClassPathsPanel.addApplyAndSaveListener {
-            // commonLog("projectClassPathsPanel.applyAndSaveListener")
-            if (scriptFile == null) {
-                return fileSaveAs(null)
-            } else {
-                this.saveProject()
-            }
-        }
+        // commonLog "createProjectClassPathTab()"
+        this.projectClassPathsManager.doBuildUI()
+        this.projectClassPathsPanel.add(this.projectClassPathsManager.builtUI)
     }
 
     void removeProjectClassPathTab() {
-        // println "removeProjectClassPathTab()"
-        if (this.projectClassPathsPanel) {
-            this.projectTabPanel.remove(this.projectClassPathsPanel.builtUI)
-            this.projectClassPathsPanel = null
-        }
+        // commonLog "removeProjectClassPathTab()"
+        this.projectClassPathsManager.clearBuiltUI()
+        this.projectClassPathsPanel.removeAll()
     }
 
     public Map validateInteractionModuleName(String name) {

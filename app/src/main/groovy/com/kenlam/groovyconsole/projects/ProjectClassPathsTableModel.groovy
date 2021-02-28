@@ -183,9 +183,20 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
         super.fireTableRowsInserted(indexInserted, indexInserted)
     }
 
+    public void setRowsData(List<ProjectClassPathEntry> classPathEntries) {
+        this.projectClasspathEntries.clear()
+        this.projectClasspathEntries.addAll(classPathEntries)
+        fireTableDataChanged()
+    }
+
     public void removeRow(int modelRowIndex) {
         projectClasspathEntries.remove(modelRowIndex)
         // commonLog("projectClasspathEntries.remove(${modelRowIndex})")
         fireTableRowsDeleted(modelRowIndex, modelRowIndex);
+    }
+
+    public void removeAllRows() {
+        projectClasspathEntries.clear()
+        fireTableDataChanged()
     }
 }

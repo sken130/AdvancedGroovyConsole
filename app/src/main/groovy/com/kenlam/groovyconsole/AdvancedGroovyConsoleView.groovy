@@ -41,8 +41,10 @@ import groovy.ui.view.WindowsDefaults
 import java.awt.datatransfer.DataFlavor
 import java.awt.dnd.*
 import javax.swing.UIManager
+import javax.swing.BoxLayout
 import javax.swing.event.DocumentListener
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.GridBagConstraints
 import javax.swing.SwingConstants
 import javax.swing.JTabbedPane
@@ -104,8 +106,16 @@ container(consoleFrame) {
 		controller.showSnippetMenuTbBtn = button(showSnippetMenuAction, text: 'Snippets')
 	}
 	
+    def projectClassPathsPanel
+    def scriptPanel1
 	projectTabPanel = tabbedPane(tabPlacement: JTabbedPane.TOP){
-		panel(name: "Script 1") {
+        projectClassPathsPanel = panel(
+            name: "Project ClassPaths",
+            alignmentX: Component.LEFT_ALIGNMENT) {
+            
+            boxLayout()
+        }
+		scriptPanel1 = panel(name: "Script 1") {
 			borderLayout()
 			build(contentPaneClass)
 			// build(statusBarClass)
@@ -124,7 +134,8 @@ container(consoleFrame) {
 		// Depending on project config, will contain other tabs such as FileInteractionModule, DBInteractionModule, TextInteractionModule
 	}
 
-
+    controller.projectClassPathsPanel = projectClassPathsPanel
+    controller.scriptPanel1 = scriptPanel1
 }
 
 

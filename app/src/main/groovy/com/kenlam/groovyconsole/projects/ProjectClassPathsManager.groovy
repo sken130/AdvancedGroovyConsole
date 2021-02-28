@@ -34,23 +34,19 @@ import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 
-public class ProjectClassPathsPanel {
-    ModelCentricJTable classPathEntryList
-    JPanel classPathEntryListPanel
+public class ProjectClassPathsManager {
 
     Component builtUI
     protected ProjectClassPathsTableModel classPathsTableModel
+    ModelCentricJTable classPathEntryList
 
     protected final List<Closure> applyAndSaveListeners = []
 
     protected void doBuildUI(AdvancedGroovyConsole console) {
+        if (this.builtUI != null || this.classPathsTableModel != null || this.classPathEntryList != null) {
+            throw new IllegalStateException("The builtUI is not cleared yet.")
+        }
 
-        JPanel panel = new JPanel()
-        panel.name = "ClassPaths"
-        panel.alignmentX = Component.LEFT_ALIGNMENT
-        // new BLDComponent()
-        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS))
-        // panel.setBorder(BorderFactory.createLineBorder(Color.red))
         JLabel label_sharedDirectories = new JLabel("Directories or files:")
         label_sharedDirectories.alignmentX = Component.LEFT_ALIGNMENT
 
@@ -95,9 +91,15 @@ public class ProjectClassPathsPanel {
 
         box.add(classPathEntryListScrollPane)
 
-        panel.add(box)
+        // panel.add(box)
 
-        this.builtUI = panel
+        this.builtUI = box
+    }
+
+    public void clearBuiltUI() {
+        this.builtUI = null
+        this.classPathsTableModel = null
+        this.classPathEntryList = null
     }
 
     public void addApplyAndSaveListener(Closure listener) {
@@ -109,9 +111,12 @@ public class ProjectClassPathsPanel {
     }
 
     public void setCurrentClassPathEntries(List<ProjectClassPathEntry> classPathEntries) {
-        classPathsTableModel.projectClasspathEntries.clear()
-        classPathsTableModel.projectClasspathEntries.addAll(classPathEntries)
+        classPathsTableModel.setRowsData(classPathEntries)
 
+    }
+
+    public void clearCurrentClassPathEntries() {
+        classPathsTableModel.removeAllRows()
     }
 
 }
