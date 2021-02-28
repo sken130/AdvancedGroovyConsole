@@ -423,8 +423,8 @@ options:
         this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
 
         // println "Reinit ProjectClassPathTab - run"
-        removeProjectClassPathTab()
-        createProjectClassPathTab()
+        removeProjectClassPathContents()
+        createProjectClassPathContents()
 
         bindResults()
 
@@ -747,8 +747,8 @@ options:
         if (askToSaveFile()) {
             scriptFile = null
             removeAllInteractionModules()
-            removeProjectClassPathTab()
-            createProjectClassPathTab()
+            removeProjectClassPathContents()
+            createProjectClassPathContents()
             setDirty(false)
             inputArea.text = ''
         }
@@ -767,8 +767,8 @@ options:
         swing.controller = consoleController
         swing.build(AdvancedGroovyConsoleActions)
         swing.build(AdvancedGroovyConsoleView)
-        removeProjectClassPathTab()
-        createProjectClassPathTab()
+        removeProjectClassPathContents()
+        createProjectClassPathContents()
         installInterceptor()
         nativeFullScreenForMac(swing.consoleFrame)
         swing.consoleFrame.pack()
@@ -852,8 +852,8 @@ options:
 
     void loadProject() {
         removeAllInteractionModules()
-        removeProjectClassPathTab()
-        createProjectClassPathTab()
+        removeProjectClassPathContents()
+        createProjectClassPathContents()
 
         JAXBContext jaxbContext = JAXBContext.newInstance(AGCProjectConfig)
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller()
@@ -1394,14 +1394,14 @@ options:
         setDirty(true) // Should calculate dirty flag properly (hash last saved/read text in each file)
     }
 
-    void createProjectClassPathTab() {
-        // commonLog "createProjectClassPathTab()"
+    void createProjectClassPathContents() {
+        // commonLog "createProjectClassPathContents()"
         this.projectClassPathsManager.doBuildUI()
         this.projectClassPathsPanel.add(this.projectClassPathsManager.builtUI)
     }
 
-    void removeProjectClassPathTab() {
-        // commonLog "removeProjectClassPathTab()"
+    void removeProjectClassPathContents() {
+        // commonLog "removeProjectClassPathContents()"
         this.projectClassPathsManager.clearBuiltUI()
         this.projectClassPathsPanel.removeAll()
     }
