@@ -794,6 +794,24 @@ options:
                 consoleText = file.readLines().join('\n')
                 scriptFile = file
                 swing.edt {
+                    // commonLog "Change tab to script panel"
+                    /*
+                       After trial and error:
+                       
+                       The change tab action should be done in a separate, earlier EDT than the EDT which set the inputArea caretPosition.
+                       
+                       Otherwise, the program will freeze with 100% CPU usage from the EDT thread if the following steps are performed:
+                       1. Load a project and script with some texts.
+                       2. Move the caret position away from the starting position (away from 0).
+                       3. Switch to the project classpaths tab.
+                       4. Load another project with empty script.
+                       5. The freeze will happen (unless I do the change tab action in this separate EDT before the next EDT below).
+                       6. Also, the freeze will also happen if I don't change the tab to the script panel before setting inputArea.caretPosition = 0
+                     */
+                    this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
+                }
+                swing.edt {
+                    // commonLog "Handle original inputArea listeners and load project"
                     def listeners = inputArea.document.getListeners(DocumentListener)
                     listeners.each { inputArea.document.removeDocumentListener(it) }
                     updateTitle()
