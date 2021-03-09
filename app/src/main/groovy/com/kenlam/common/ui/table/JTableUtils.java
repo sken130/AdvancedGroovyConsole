@@ -18,6 +18,7 @@ package com.kenlam.common.ui.table;
 
 import com.google.common.collect.Streams;
 
+import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
@@ -35,7 +36,11 @@ public class JTableUtils {
             int lastRow = event.getLastRow();
             // commonLog("TableModelEvent - firstRow " + firstRow + ", lastRow " + lastRow + ", type " + event.getType());
             if (event.getType() != TableModelEvent.DELETE) {
-                IntStream.range(firstRow, lastRow + 1).forEachOrdered((int modelRowIndexInt) -> {
+                int rowCount = model.getRowCount();
+                // commonLog("TableModelEvent - rowCount: " + rowCount);
+                int maxRowExclusive = Math.min(rowCount, (lastRow >= Integer.MAX_VALUE ? lastRow : lastRow + 1));
+                // commonLog("TableModelEvent - maxRowExclusive: " + maxRowExclusive);
+                IntStream.range(firstRow, maxRowExclusive).forEachOrdered((int modelRowIndexInt) -> {
                     // commonLog("Table model change event - modelRowIndexInt: " + modelRowIndexInt);
 
                     TableModelRowIndex modelRowIndex = new TableModelRowIndex(modelRowIndexInt);
@@ -65,11 +70,22 @@ public class JTableUtils {
                                     .filter(Objects::nonNull)
                                     .collect(Collectors.toList());
 
+                    // commonLog("allPreferredHeights - " + allPreferredHeights);
                     if (allPreferredHeights.size() > 0) {
                         Optional<Integer> maxPreferredHeightOption = allPreferredHeights.stream().max(Comparator.naturalOrder());
                         Integer maxPreferredHeight = maxPreferredHeightOption.get();  // Should always exist, after filtering null and checking for list emptiness
-                        // commonLog("  Going to setRowHeight modelRowIndexInt: " + modelRowIndexInt + ", maxPreferredHeight: " + maxPreferredHeight);
-                        table.setRowHeight(modelRowIndexInt, maxPreferredHeight);
+
+                        /*
+                           If call table.setRowHeight() immediately,
+                           when I load a new project and load the old classpaths,
+                           and after I switch tab to project classpaths panel,
+                           the row height doesn't reflect the value I set here.
+                           I don't know why.
+                         */
+                        SwingUtilities.invokeLater(() -> {
+                            // commonLog("  Going to setRowHeight modelRowIndexInt: " + modelRowIndexInt + ", maxPreferredHeight: " + maxPreferredHeight);
+                            table.setRowHeight(modelRowIndexInt, maxPreferredHeight);
+                        });
                     }
                 });
             }

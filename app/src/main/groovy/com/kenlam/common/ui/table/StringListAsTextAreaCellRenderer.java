@@ -34,7 +34,9 @@ public class StringListAsTextAreaCellRenderer extends AbstractModelCentricJTable
                                                                TableModelColumnIndex modelColumnIndex,
                                                                TableViewRowIndex viewRowIndex,
                                                                TableViewColumnIndex viewColumnIndex) {
-        // commonLog("renderTableCellComponent - field: " + columnMeta.getFieldName());
+        // commonLog("renderTableCellComponent - table: " + table.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(table)));
+        // commonLog("renderTableCellComponent - field: " + columnMeta.getFieldName() + ", value: " + value +
+        //         ", modelRowIndex: " + modelRowIndex + ", modelColumnIndex:" + modelColumnIndex);
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
         List<String> classPaths = (List<String>) value;
@@ -43,6 +45,7 @@ public class StringListAsTextAreaCellRenderer extends AbstractModelCentricJTable
         }
         textArea.setBounds(table.getCellRect(viewRowIndex.Value, viewColumnIndex.Value, true));
         int preferredHeight = textArea.getPreferredSize().height;
+        // commonLog("renderTableCellComponent - preferredHeight :" + preferredHeight);
         JTableRendererReturnValues returnValues = new JTableRendererReturnValues(textArea, preferredHeight);
         return returnValues;
     }
