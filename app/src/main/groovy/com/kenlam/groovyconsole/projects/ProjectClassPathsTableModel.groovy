@@ -21,12 +21,12 @@ import com.kenlam.common.ui.table.AbstractModelCentricJTableCellRenderer
 import com.kenlam.common.ui.table.AbstractModelCentricTableModel
 import com.kenlam.common.ui.table.JTableRendererReturnValues
 import com.kenlam.common.ui.table.StringListAsTextAreaCellRenderer
-import com.kenlam.common.ui.table.StringListAsTextAreaEditor
 import com.kenlam.common.ui.table.TableModelColumnIndex
 import com.kenlam.common.ui.table.TableModelColumnMeta
 import com.kenlam.common.ui.table.TableModelRowIndex
 import com.kenlam.common.ui.table.TableViewColumnIndex
 import com.kenlam.common.ui.table.TableViewRowIndex
+import com.kenlam.common.ui.table.popupeditor.StringListAsTextAreaPopupEditor
 import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
 
 import javax.swing.Box
@@ -52,7 +52,7 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                             return new StringListAsTextAreaCellRenderer()
                         },
                         () -> {
-                            return new StringListAsTextAreaEditor()
+                            return new StringListAsTextAreaPopupEditor()
                         }
                 ),
                 new TableModelColumnMeta(
@@ -62,7 +62,7 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                             return new StringListAsTextAreaCellRenderer()
                         },
                         () -> {
-                            return new StringListAsTextAreaEditor()
+                            return new StringListAsTextAreaPopupEditor()
                         }
                 ),
                 new TableModelColumnMeta(
