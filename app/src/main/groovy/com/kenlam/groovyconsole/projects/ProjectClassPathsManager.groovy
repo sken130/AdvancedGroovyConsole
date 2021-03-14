@@ -21,10 +21,13 @@ import com.kenlam.common.ui.table.JTableUtils
 import com.kenlam.common.ui.table.ModelCentricJTable
 import com.kenlam.groovyconsole.AdvancedGroovyConsole
 import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
+import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathSettings
 
 import javax.swing.JButton
 import javax.swing.JScrollPane
 import javax.swing.JToolBar
+import javax.xml.bind.JAXBContext
+import javax.xml.bind.Marshaller
 import java.awt.Component
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -34,11 +37,15 @@ import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 
+import static com.kenlam.common.SimpleLog.commonLog
+
 public class ProjectClassPathsManager {
 
     Component builtUI
     protected ProjectClassPathsTableModel classPathsTableModel
     ModelCentricJTable classPathEntryList
+
+    String loadedClassPathEntriesXml
 
     protected final List<Closure> applyAndSaveListeners = []
 
@@ -94,6 +101,8 @@ public class ProjectClassPathsManager {
         // panel.add(box)
 
         this.builtUI = box
+
+        this.commit()
     }
 
     public void clearBuiltUI() {
@@ -110,13 +119,50 @@ public class ProjectClassPathsManager {
         return classPathsTableModel.projectClasspathEntries
     }
 
+    // Mainly for dirty checking
+    public String convertClassPathEntriesToXml(List<ProjectClassPathEntry> classPathEntries) {
+        JAXBContext ctx = JAXBContext.newInstance(ProjectClassPathSettings)
+        Marshaller marshaller = ctx.createMarshaller()
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+
+        ProjectClassPathSettings projectClassPathSettings = new ProjectClassPathSettings()
+        projectClassPathSettings.classPathEntries = classPathEntries
+
+        StringWriter stringWriter = new StringWriter()
+        stringWriter.withWriter { selfWriter ->
+            marshaller.marshal(projectClassPathSettings, selfWriter)
+        }
+        return stringWriter.toString()
+    }
+
+    public void commit() {
+        this.loadedClassPathEntriesXml = convertClassPathEntriesToXml(getCurrentClassPathEntries())
+        // commonLog("commit - loadedClassPathEntriesXml:\n" + this.loadedClassPathEntriesXml)
+    }
+
+    public void loadCurrentClassPathEntries(List<ProjectClassPathEntry> classPathEntries) {
+        setCurrentClassPathEntries(classPathEntries)
+
+        commit()
+    }
+
     public void setCurrentClassPathEntries(List<ProjectClassPathEntry> classPathEntries) {
         classPathsTableModel.setRowsData(classPathEntries)
-
     }
 
     public void clearCurrentClassPathEntries() {
         classPathsTableModel.removeAllRows()
+
+        commit()
     }
 
+    public boolean isDirty() {
+        List<ProjectClassPathEntry> currentClassPathEntries = getCurrentClassPathEntries()
+        String currentXml = convertClassPathEntriesToXml(currentClassPathEntries)
+        // commonLog("isDirty - currentXml:\n" + currentXml)
+
+        boolean xmlMatched = Objects.equals(this.loadedClassPathEntriesXml, currentXml)
+        // commonLog("isDirty - xmlMatched ${xmlMatched}")
+        return !xmlMatched
+    }
 }

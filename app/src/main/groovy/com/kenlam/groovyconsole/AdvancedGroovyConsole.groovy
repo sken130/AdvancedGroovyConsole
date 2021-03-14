@@ -239,7 +239,7 @@ class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, Compone
     private final MapWithDefault<Class, AtomicInteger> interactionModuleCountersByType = [:].withDefault { Class key ->
         return new AtomicInteger()
     }
-    
+
     JPanel scriptPanel1
 
     JPanel projectClassPathsPanel
@@ -321,10 +321,10 @@ options:
         }
 
         binding.variables._outputTransforms = OutputTransforms.loadOutputTransforms()
-        
+
         initProjectClassPathsManager()
     }
-    
+
     protected void initProjectClassPathsManager() {
         // commonLog("projectClassPathsPanel.addApplyAndSaveListener")
         projectClassPathsManager.addApplyAndSaveListener {
@@ -419,7 +419,7 @@ options:
 
         // create the view
         swing.build(AdvancedGroovyConsoleView)
-        
+
         this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
 
         // println "Reinit ProjectClassPathTab - run"
@@ -595,7 +595,7 @@ options:
 
     // Return false if use elected to cancel
     boolean askToSaveFile() {
-        if (!dirty) {
+        if (!dirty && !this.computeIsDirty()) {
             return true
         }
         switch (JOptionPane.showConfirmDialog(frame,
@@ -827,7 +827,7 @@ options:
                 // GROOVY-3684: focus away and then back to inputArea ensures caret blinks
                 swing.doLater outputArea.&requestFocusInWindow
                 swing.doLater inputArea.&requestFocusInWindow
-                
+
                 // SwingUtilities.invokeLater{  // If switch tab immediately, the event dispatcher thread will loop infinitely, I don't know why.
                     // commonLog "this.projectTabPanel.setSelectedComponent(this.scriptPanel1)"
                     // this.projectTabPanel.setSelectedComponent(this.scriptPanel1)
@@ -883,7 +883,7 @@ options:
             if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
                 ProjectClassPathSettings projectClassPathSettings = configRoot.projectClassPathSettings
                 List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings.classPathEntries ?: []
-                this.projectClassPathsManager.setCurrentClassPathEntries(classPathEntries)
+                this.projectClassPathsManager.loadCurrentClassPathEntries(classPathEntries)
 
                 configRoot.interactionModules.each { InteractionModuleConfig iModuleConfig ->
                     // println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
@@ -1478,6 +1478,16 @@ options:
         dirty = newDirty
         saveAction.enabled = newDirty
         updateTitle()
+    }
+
+    public boolean computeIsDirty() {
+        boolean isDirty = false
+
+        if (this.projectClassPathsManager.isDirty()) {
+            isDirty = true
+        }
+
+        return isDirty
     }
 
     private void setInputTextFromHistory(newIndex) {
