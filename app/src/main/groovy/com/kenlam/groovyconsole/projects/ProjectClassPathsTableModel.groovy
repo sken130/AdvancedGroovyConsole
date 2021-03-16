@@ -27,6 +27,7 @@ import com.kenlam.common.ui.table.TableModelRowIndex
 import com.kenlam.common.ui.table.TableViewColumnIndex
 import com.kenlam.common.ui.table.TableViewRowIndex
 import com.kenlam.common.ui.table.popupeditor.StringListAsTextAreaPopupEditor
+import com.kenlam.common.ui.table.popupeditor.TableEditorPopupDialog
 import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
 
 import javax.swing.Box
@@ -52,7 +53,9 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                             return new StringListAsTextAreaCellRenderer()
                         },
                         () -> {
-                            return new StringListAsTextAreaPopupEditor()
+                            return new StringListAsTextAreaPopupEditor((TableEditorPopupDialog popup) -> {
+                                popup.setTitle("Paths")
+                            })
                         }
                 ),
                 new TableModelColumnMeta(
@@ -62,7 +65,9 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                             return new StringListAsTextAreaCellRenderer()
                         },
                         () -> {
-                            return new StringListAsTextAreaPopupEditor()
+                            return new StringListAsTextAreaPopupEditor((TableEditorPopupDialog popup) -> {
+                                popup.setTitle("Wildcards")
+                            })
                         }
                 ),
                 new TableModelColumnMeta(

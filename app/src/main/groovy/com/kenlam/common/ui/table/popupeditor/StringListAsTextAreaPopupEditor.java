@@ -27,10 +27,11 @@ import java.util.stream.Collectors;
 
 public class StringListAsTextAreaPopupEditor extends AbstractModelCentricJTableCellPopupEditor {
 
-    public StringListAsTextAreaPopupEditor() {
+    public StringListAsTextAreaPopupEditor(PopupDialogModifier popupDialogModifier) {
         super(() -> {
-            return new StringListAsTextAreaCellRenderer();
-        });
+                    return new StringListAsTextAreaCellRenderer();
+                },
+                popupDialogModifier);
     }
 
     @Override

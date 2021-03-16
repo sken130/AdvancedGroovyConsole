@@ -3,6 +3,8 @@
 2. (TBC) Categorization of each tab's output
 5. Load other script files/projects
 7. Fix starting window size problem.
+9. Table resize event view index vs model index check.
+10. Revamp the renderer, no need to create new renderer instance every time.
 
 Obsolete tasks that original created when I assumed one-window-multiple-projects:
 3. Per tab splitPane & detachedOutput setting

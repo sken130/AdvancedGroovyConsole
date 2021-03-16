@@ -24,13 +24,22 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import static com.kenlam.common.SimpleLog.commonLog;
 
 public abstract class AbstractModelCentricJTableCellPopupEditor extends AbstractModelCentricJTableCellEditor {
     /*
@@ -41,18 +50,18 @@ public abstract class AbstractModelCentricJTableCellPopupEditor extends Abstract
         Because the text area layout is not the same when used in table cell and when used in a separate popup window.
      */
     protected final TableCellRendererGetter rendererGetter;
+    protected final PopupDialogModifier popupDialogModifier;
     private TableEditorPopupDialog popup;
     // private JTextArea dummyEditorComponent;
 
     /*
         To-do list:
-        1. Allow to change popup title
-        2. Allow to set the popup width
         3. Consider whether to focus on the table or cell after edit
      */
 
-    public AbstractModelCentricJTableCellPopupEditor(TableCellRendererGetter rendererGetter) {
+    public AbstractModelCentricJTableCellPopupEditor(TableCellRendererGetter rendererGetter, PopupDialogModifier popupDialogModifier) {
         this.rendererGetter = rendererGetter;
+        this.popupDialogModifier = popupDialogModifier;
 
         // setClickCountToStart(1);   // Perhaps we could set requiring double-click to edit instead of singe-click in the future.
     }
@@ -77,14 +86,28 @@ public abstract class AbstractModelCentricJTableCellPopupEditor extends Abstract
         //  Set up the dialog where we do the actual editing
         popup = new TableEditorPopupDialog(editorComponent, this);
 
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        DisplayMode displayMode = gd.getDisplayMode();
+        int screenWidth = displayMode.getWidth();
+        int screenHeight = displayMode.getHeight();
+        int popupWidth = Math.min(screenWidth * 2 / 3, 1600);
+        int popupHeight = Math.min(screenHeight * 2 / 3, 200);
+        popup.setPreferredSize(new Dimension(popupWidth, popupHeight));
+
         SwingUtilities.invokeLater(() -> {
             // popup.setText(currentText);
             //              popup.setLocationRelativeTo( editorComponent );
             Point p = renderedComponent.getLocationOnScreen();
-            popup.setLocation(p.x, p.y + renderedComponent.getSize().height);
+            popup.setLocation(Math.min(p.x, screenWidth - popupWidth),
+                    Math.min(p.y + renderedComponent.getSize().height, screenHeight - popupHeight));
+            popup.pack();
             popup.setVisible(true);
             fireEditingStopped();
         });
+
+        if (this.popupDialogModifier != null) {
+            this.popupDialogModifier.modifyPopup(popup);
+        }
 
         // renderedComponent.setText("frog");
         // renderedComponent.setEditable(false);
@@ -149,6 +172,24 @@ class TableEditorPopupDialog extends JDialog {
         pack();
 
         getRootPane().setDefaultButton(ok);
+
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // commonLog("TableEditorPopupDialog closing");
+                // Please test that the Ok and Cancel buttons won't trigger this event, while the close (X) button will.
+                TableEditorPopupDialog.this.editor.cancelCellEditing();
+                super.windowClosing(e);
+            }
+
+            // @Override
+            // public void windowClosed(WindowEvent e) {
+            //     commonLog("TableEditorPopupDialog closed");
+            //     super.windowClosed(e);
+            // }
+        });
     }
 
     public Component getEditorComponent() {
