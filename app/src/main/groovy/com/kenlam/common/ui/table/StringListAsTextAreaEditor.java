@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 import static com.kenlam.common.SimpleLog.commonLog;
 
 public class StringListAsTextAreaEditor extends AbstractModelCentricJTableCellEditor {
+    protected JTextArea textArea;
+
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, TableModelRowIndex modelRowIndex, TableModelColumnIndex modelColumnIndex, TableViewRowIndex viewRowIndex, TableViewColumnIndex viewColumnIndex) {
         textArea = new JTextArea();
@@ -48,5 +50,4 @@ public class StringListAsTextAreaEditor extends AbstractModelCentricJTableCellEd
         return lines;
     }
 
-    protected JTextArea textArea;
 }
