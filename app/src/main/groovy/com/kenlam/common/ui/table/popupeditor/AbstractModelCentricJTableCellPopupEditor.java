@@ -36,8 +36,10 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.EventObject;
 
 import static com.kenlam.common.SimpleLog.commonLog;
 
@@ -54,16 +56,24 @@ public abstract class AbstractModelCentricJTableCellPopupEditor extends Abstract
     private TableEditorPopupDialog popup;
     // private JTextArea dummyEditorComponent;
 
-    /*
-        To-do list:
-        3. Consider whether to focus on the table or cell after edit
-     */
-
     public AbstractModelCentricJTableCellPopupEditor(TableCellRendererGetter rendererGetter, PopupDialogModifier popupDialogModifier) {
         this.rendererGetter = rendererGetter;
         this.popupDialogModifier = popupDialogModifier;
 
         // setClickCountToStart(1);   // Perhaps we could set requiring double-click to edit instead of singe-click in the future.
+    }
+
+    @Override
+    public boolean isCellEditable(EventObject event) {
+        // commonLog("isCellEditable - event: " + event);
+        if (event instanceof MouseEvent) {
+            MouseEvent mouseEvent = (MouseEvent) event;
+            if (mouseEvent.getButton() == MouseEvent.BUTTON1) {
+                return super.isCellEditable(mouseEvent);
+            }
+        }
+        // commonLog("isCellEditable -   will return false");
+        return false;
     }
 
     protected abstract Component getTableCellEditorComponentInsideDialog(JTable table, Object value, boolean isSelected,
