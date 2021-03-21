@@ -84,7 +84,8 @@ public class JTableUtils {
                          */
                         SwingUtilities.invokeLater(() -> {
                             // commonLog("  Going to setRowHeight modelRowIndexInt: " + modelRowIndexInt + ", maxPreferredHeight: " + maxPreferredHeight);
-                            table.setRowHeight(modelRowIndexInt, maxPreferredHeight);
+                            TableViewRowIndex _viewRowIndex = new TableViewRowIndex(table.convertRowIndexToView(modelRowIndex.Value));
+                            table.setRowHeight(_viewRowIndex.Value, maxPreferredHeight);  // After some testing by sorting, I know it takes in the view row index rather than the model row index.
                         });
                     }
                 });

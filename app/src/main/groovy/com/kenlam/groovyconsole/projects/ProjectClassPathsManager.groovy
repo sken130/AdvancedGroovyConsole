@@ -82,7 +82,7 @@ public class ProjectClassPathsManager {
         classPathsTableModel = new ProjectClassPathsTableModel()
 
         this.classPathEntryList = new ModelCentricJTable(classPathsTableModel)
-
+        // this.classPathEntryList.setAutoCreateRowSorter(true);  // The sorting is only enabled when debugging.
         JTableUtils.addAutoHeightListenersToModelCentricJTable(this.classPathEntryList)
 
         // this.classPathEntryList.setDefaultEditor()
