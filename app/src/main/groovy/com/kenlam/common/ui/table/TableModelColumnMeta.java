@@ -23,24 +23,24 @@ public class TableModelColumnMeta {
     private final String fieldName;
     private final String columnHeader;
 
-    private final TableCellRendererGetter cellRendererGetter;
+    private final TableCellRenderer cellRenderer;
     private final TableCellEditorGetter cellEditorGetter;
 
     private final boolean hasData;
 
     public TableModelColumnMeta(String fieldName, String columnHeader,
-                                TableCellRendererGetter cellRendererGetter,
+                                TableCellRenderer cellRenderer,
                                 TableCellEditorGetter cellEditorGetter) {
-        this(fieldName, columnHeader, cellRendererGetter, cellEditorGetter, true);
+        this(fieldName, columnHeader, cellRenderer, cellEditorGetter, true);
     }
 
     public TableModelColumnMeta(String fieldName, String columnHeader,
-                                TableCellRendererGetter cellRendererGetter,
+                                TableCellRenderer cellRenderer,
                                 TableCellEditorGetter cellEditorGetter,
                                 boolean hasData) {
         this.fieldName = fieldName;
         this.columnHeader = columnHeader;
-        this.cellRendererGetter = cellRendererGetter;
+        this.cellRenderer = cellRenderer;
         this.cellEditorGetter = cellEditorGetter;
         this.hasData = hasData;
     }
@@ -54,15 +54,11 @@ public class TableModelColumnMeta {
     }
 
     public TableCellRenderer getCellRenderer() {
-        return cellRendererGetter.getCellRenderer();
+        return this.cellRenderer;
     }
 
     public TableCellEditor getCellEditor() {
         return cellEditorGetter.getCellEditor();
-    }
-
-    public TableCellRendererGetter getCellRendererGetter() {
-        return cellRendererGetter;
     }
 
     public TableCellEditorGetter getCellEditorGetter() {

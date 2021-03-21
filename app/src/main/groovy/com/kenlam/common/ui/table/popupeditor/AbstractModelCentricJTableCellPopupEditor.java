@@ -41,8 +41,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.EventObject;
 
-import static com.kenlam.common.SimpleLog.commonLog;
-
 public abstract class AbstractModelCentricJTableCellPopupEditor extends AbstractModelCentricJTableCellEditor {
     /*
         Why require renderer here:
@@ -51,13 +49,13 @@ public abstract class AbstractModelCentricJTableCellPopupEditor extends Abstract
         For the editor, why not reuse com.kenlam.common.ui.table.StringListAsTextAreaEditor:
         Because the text area layout is not the same when used in table cell and when used in a separate popup window.
      */
-    protected final TableCellRendererGetter rendererGetter;
+    protected final TableCellRenderer renderer;
     protected final PopupDialogModifier popupDialogModifier;
     private TableEditorPopupDialog popup;
     // private JTextArea dummyEditorComponent;
 
-    public AbstractModelCentricJTableCellPopupEditor(TableCellRendererGetter rendererGetter, PopupDialogModifier popupDialogModifier) {
-        this.rendererGetter = rendererGetter;
+    public AbstractModelCentricJTableCellPopupEditor(TableCellRenderer renderer, PopupDialogModifier popupDialogModifier) {
+        this.renderer = renderer;
         this.popupDialogModifier = popupDialogModifier;
 
         // setClickCountToStart(1);   // Perhaps we could set requiring double-click to edit instead of singe-click in the future.
@@ -88,7 +86,7 @@ public abstract class AbstractModelCentricJTableCellPopupEditor extends Abstract
         Component editorComponent = this.getTableCellEditorComponentInsideDialog(table, value, isSelected,
                 modelRowIndex, modelColumnIndex, viewRowIndex, viewColumnIndex);
 
-        TableCellRenderer renderer = rendererGetter.getCellRenderer();
+        TableCellRenderer renderer = this.renderer;
 
         Component renderedComponent = renderer.getTableCellRendererComponent(table, value, isSelected, false,
                 viewRowIndex.Value, viewColumnIndex.Value);

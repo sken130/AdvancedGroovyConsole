@@ -49,9 +49,7 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                 new TableModelColumnMeta(
                         "paths",
                         "Paths",
-                        () -> {
-                            return new StringListAsTextAreaCellRenderer()
-                        },
+                        new StringListAsTextAreaCellRenderer(),
                         () -> {
                             return new StringListAsTextAreaPopupEditor((TableEditorPopupDialog popup) -> {
                                 popup.setTitle("Paths")
@@ -61,9 +59,7 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                 new TableModelColumnMeta(
                         "wildCards",
                         "Wildcards",
-                        () -> {
-                            return new StringListAsTextAreaCellRenderer()
-                        },
+                        new StringListAsTextAreaCellRenderer(),
                         () -> {
                             return new StringListAsTextAreaPopupEditor((TableEditorPopupDialog popup) -> {
                                 popup.setTitle("Wildcards")
@@ -73,22 +69,21 @@ public class ProjectClassPathsTableModel extends AbstractModelCentricTableModel 
                 new TableModelColumnMeta(
                         "actions",
                         "Actions",
-                        () -> {
-                            return new AbstractModelCentricJTableCellRenderer() {
-                                @Override
-                                JTableRendererReturnValues renderTableCellComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-                                                                                    TableModelColumnMeta columnMeta,
-                                                                                    TableModelRowIndex modelRowIndex,
-                                                                                    TableModelColumnIndex modelColumnIndex,
-                                                                                    TableViewRowIndex viewRowIndex,
-                                                                                    TableViewColumnIndex viewColumnIndex) {
-                                    Box box = ProjectClassPathsTableModel.getRowActionButtonsBox(null, table, modelRowIndex)
-                                    JTableRendererReturnValues returnValues = new JTableRendererReturnValues(box, null)
-                                    return returnValues
-                                }
-
+                        new AbstractModelCentricJTableCellRenderer() {
+                            @Override
+                            JTableRendererReturnValues renderTableCellComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                                                TableModelColumnMeta columnMeta,
+                                                                                TableModelRowIndex modelRowIndex,
+                                                                                TableModelColumnIndex modelColumnIndex,
+                                                                                TableViewRowIndex viewRowIndex,
+                                                                                TableViewColumnIndex viewColumnIndex) {
+                                Box box = ProjectClassPathsTableModel.getRowActionButtonsBox(null, table, modelRowIndex)
+                                JTableRendererReturnValues returnValues = new JTableRendererReturnValues(box, null)
+                                return returnValues
                             }
-                        },
+
+                        }
+                        ,
                         () -> {
                             return new AbstractModelCentricJTableCellEditor() {
                                 @Override
