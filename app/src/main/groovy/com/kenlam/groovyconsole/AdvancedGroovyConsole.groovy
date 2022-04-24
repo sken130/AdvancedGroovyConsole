@@ -40,6 +40,10 @@ import groovy.inspect.swingui.ObjectBrowser
 import groovy.inspect.swingui.AstBrowser
 import groovy.swing.SwingBuilder
 import groovy.ui.text.FindReplaceUtility
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOCase
+import org.apache.commons.io.filefilter.DirectoryFileFilter
+import org.apache.commons.io.filefilter.WildcardFileFilter
 import org.codehaus.groovy.control.messages.SimpleMessage
 
 import java.awt.Component
@@ -329,6 +333,8 @@ options:
         // commonLog("projectClassPathsPanel.addApplyAndSaveListener")
         projectClassPathsManager.addApplyAndSaveListener {
             // commonLog("projectClassPathsPanel.applyAndSaveListener")
+            List<ProjectClassPathEntry> projectClassPathEntries = this.projectClassPathsManager.getCurrentClassPathEntries()
+            this.loadProjectClassPathsToCurrentShell(projectClassPathEntries)
             if (scriptFile == null) {
                 return fileSaveAs(null)
             } else {
@@ -356,6 +362,7 @@ options:
         config = new CompilerConfiguration()
         if (threadInterrupt) config.addCompilationCustomizers(new ASTTransformationCustomizer(ThreadInterrupt))
 
+        // commonLog("newScript - will new GroovyShell object")
         shell = new GroovyShell(parent, binding, config)
     }
 
@@ -868,6 +875,45 @@ options:
         return adcProjectConfigFile
     }
 
+    void loadProjectClassPathsToCurrentShell(List<ProjectClassPathEntry> classPathEntries) {
+        // commonLog("loadProjectClassPathsToCurrentShell")
+        GroovyClassLoader shellClassLoader = shell.getClassLoader()
+        classPathEntries.each { ProjectClassPathEntry classPathEntry ->
+            List<File> paths = classPathEntry.paths.collect { String path ->
+                File pathFile = new File(path)
+                if (!pathFile.exists()) {
+                    commonLog("The path ${pathFile} doesn't exist, skipping it.")
+                    return
+                }
+
+                if (pathFile.isFile()) {
+                    URL fileURL = pathFile.toURI().toURL()
+                    commonLog("Load single file URL: ${fileURL}")
+                    shellClassLoader.addURL(fileURL)   // loading jar works, nice
+                } else if (pathFile.isDirectory()) {
+                    if (classPathEntry.wildCards.size() > 0) {
+                        // List<File> files = FileUtils.listFiles(pathFile,
+                                // new WildcardFileFilter(classPathEntry.wildCards, IOCase.INSENSITIVE),
+                                // DirectoryFileFilter.DIRECTORY)
+                        // files.each{ File file ->
+                            // URL fileURL = file.toURI().toURL()
+                            // commonLog("Load directory file URL: ${fileURL}")
+                            // shellClassLoader.addURL(fileURL)
+                        // }
+                        URL directoryURL = pathFile.toURI().toURL()
+                        commonLog("Load directory URL: ${directoryURL}")  // not sure how it works yet
+                        shellClassLoader.addURL(directoryURL)
+                    } else {
+                        commonLog("The path ${pathFile} hasn't specified any wildcard. Will skip it instead of blindly assuming all files.")
+                    }
+                } else {
+                    commonLog("The path ${pathFile} is not a file nor a directory, skipping it.")
+                    return
+                }
+            }
+        }
+    }
+
     void loadProject() {
         removeAllInteractionModules()
         removeProjectClassPathContents()
@@ -884,6 +930,7 @@ options:
                 ProjectClassPathSettings projectClassPathSettings = configRoot.projectClassPathSettings
                 List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings.classPathEntries ?: []
                 this.projectClassPathsManager.loadCurrentClassPathEntries(classPathEntries)
+                loadProjectClassPathsToCurrentShell(classPathEntries)
 
                 configRoot.interactionModules.each { InteractionModuleConfig iModuleConfig ->
                     // println "  iModuleConfig.type ${iModuleConfig.type} (${iModuleConfig.type.getClass()})"
@@ -1185,7 +1232,7 @@ options:
             currentClasspathJarDir = fc.currentDirectory
             Preferences.userNodeForPackage(AdvancedGroovyConsole).put('currentClasspathJarDir', currentClasspathJarDir.path)
             fc.selectedFiles?.each { file ->
-                shell.getClassLoader().addURL(file.toURL())
+                shell.getClassLoader().addURL(file.toURL()) // It's groovy.lang.GroovyClassLoader
             }
         }
     }
@@ -1197,7 +1244,7 @@ options:
         if (fc.showDialog(frame, 'Add') == JFileChooser.APPROVE_OPTION) {
             currentClasspathDir = fc.currentDirectory
             Preferences.userNodeForPackage(AdvancedGroovyConsole).put('currentClasspathDir', currentClasspathDir.path)
-            shell.getClassLoader().addURL(fc.selectedFile.toURL())
+            shell.getClassLoader().addURL(fc.selectedFile.toURL()) // It's groovy.lang.GroovyClassLoader
         }
     }
 
@@ -1253,6 +1300,7 @@ options:
                 Map modulesByName = prepareInteractionModulesForScript()
                 shell.setVariable(INTERACTION_MODULES_VARIABLE, modulesByName)
                 def result
+                // commonLog("useScriptClassLoaderForScriptExecution ${useScriptClassLoaderForScriptExecution}")
                 if (useScriptClassLoaderForScriptExecution) {
                     ClassLoader savedThreadContextClassLoader = Thread.currentThread().contextClassLoader
                     try {
@@ -1422,6 +1470,7 @@ options:
         // commonLog "removeProjectClassPathContents()"
         this.projectClassPathsManager.clearBuiltUI()
         this.projectClassPathsPanel.removeAll()
+        this.clearContext()
     }
 
     public Map validateInteractionModuleName(String name) {
