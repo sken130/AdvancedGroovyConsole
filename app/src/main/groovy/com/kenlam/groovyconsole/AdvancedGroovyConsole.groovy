@@ -904,7 +904,13 @@ options:
                         commonLog("Load directory URL: ${directoryURL}")  // not sure how it works yet
                         shellClassLoader.addURL(directoryURL)
                     } else {
-                        commonLog("The path ${pathFile} hasn't specified any wildcard. Will skip it instead of blindly assuming all files.")
+                        // commonLog("The path ${pathFile} hasn't specified any wildcard. Will skip it instead of blindly assuming all files.")
+                        URL directoryURL = pathFile.toURI().toURL()
+                        commonLog("Load directory URL without wildcard: ${directoryURL}")
+                        /*
+                           It can be used to load a directory of compiled class files at least
+                         */
+                        shellClassLoader.addURL(directoryURL)
                     }
                 } else {
                     commonLog("The path ${pathFile} is not a file nor a directory, skipping it.")
