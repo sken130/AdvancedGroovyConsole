@@ -934,7 +934,7 @@ options:
             // println "configRoot.type ${configRoot.type} (${configRoot.type.getClass()})"
             if (configRoot.type == AGCProjectType.SINGLE_SCRIPT_PROJECT) {
                 ProjectClassPathSettings projectClassPathSettings = configRoot.projectClassPathSettings
-                List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings.classPathEntries ?: []
+                List<ProjectClassPathEntry> classPathEntries = projectClassPathSettings?.classPathEntries ?: []
                 this.projectClassPathsManager.loadCurrentClassPathEntries(classPathEntries)
                 loadProjectClassPathsToCurrentShell(classPathEntries)
 

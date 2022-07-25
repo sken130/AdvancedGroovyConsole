@@ -8,3 +8,9 @@ Obsolete tasks that original created when I assumed one-window-multiple-projects
 3. Per tab splitPane & detachedOutput setting
 4. Hide the new window functionality
 8. Per project undo and redo action
+
+
+Project Classpath related:
+
+1. Allow paths relative to .agcproject file.
+2. Add button to view all the actually loaded classpaths.
