@@ -26,8 +26,8 @@ import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathSettings
 import javax.swing.JButton
 import javax.swing.JScrollPane
 import javax.swing.JToolBar
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.Marshaller
+import jakarta.xml.bind.JAXBContext
+import jakarta.xml.bind.Marshaller
 import java.awt.Component
 import javax.swing.Box
 import javax.swing.BoxLayout

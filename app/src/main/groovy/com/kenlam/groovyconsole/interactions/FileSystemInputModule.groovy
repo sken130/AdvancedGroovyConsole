@@ -75,7 +75,7 @@ public class FileSystemInputModule extends InteractionModule {
 			jList.dropMode = DropMode.INSERT
 			DropTargetListener dtListener = [
 				dragEnter: { DropTargetDragEvent evt ->
-					if (evt.dropTargetContext.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+					if (evt.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
 						evt.acceptDrag(DnDConstants.ACTION_COPY)
 					} else {
 						evt.rejectDrag()

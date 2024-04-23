@@ -32,10 +32,10 @@
  */
 package com.kenlam.groovyconsole
 
-import groovy.ui.view.*
+import groovy.console.ui.view.*
 
-import groovy.ui.ConsoleTextEditor
-import groovy.ui.Console
+import groovy.console.ui.ConsoleTextEditor
+import groovy.console.ui.Console
 import java.awt.*
 import java.awt.image.BufferedImage
 import static javax.swing.JSplitPane.VERTICAL_SPLIT

@@ -32,12 +32,12 @@
  */
 package com.kenlam.groovyconsole
 
-import groovy.ui.*
+import groovy.console.ui.*
 
-import groovy.ui.view.Defaults
-import groovy.ui.view.GTKDefaults
-import groovy.ui.view.MacOSXDefaults
-import groovy.ui.view.WindowsDefaults
+import groovy.console.ui.view.Defaults
+import groovy.console.ui.view.GTKDefaults
+import groovy.console.ui.view.MacOSXDefaults
+import groovy.console.ui.view.WindowsDefaults
 import java.awt.datatransfer.DataFlavor
 import java.awt.dnd.*
 import javax.swing.UIManager
@@ -196,7 +196,7 @@ controller.rootElement = inputArea.document.defaultRootElement
 
 def dtListener =  [
     dragEnter:{DropTargetDragEvent evt ->
-        if (evt.dropTargetContext.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+        if (evt.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
             evt.acceptDrag(DnDConstants.ACTION_COPY)
         } else {
             evt.rejectDrag()

@@ -32,7 +32,7 @@
  */
 package com.kenlam.groovyconsole
 
-import groovy.ui.view.*
+import groovy.console.ui.view.*
 
 import java.awt.MenuItem;
 

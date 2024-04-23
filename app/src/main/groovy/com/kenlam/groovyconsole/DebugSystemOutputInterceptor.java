@@ -40,7 +40,7 @@ import java.io.PrintStream;
 
 /**
  * Intercepts System.out/System.err. Implementation helper for AdvancedGroovyConsole.groovy.
- * Copied from groovy.ui.SystemOutputInterceptor
+ * Copied from groovy.console.ui.SystemOutputInterceptor
  */
 public class DebugSystemOutputInterceptor extends FilterOutputStream {
 

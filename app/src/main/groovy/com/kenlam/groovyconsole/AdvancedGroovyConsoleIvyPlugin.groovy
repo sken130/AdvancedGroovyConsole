@@ -32,7 +32,7 @@
  */
 package com.kenlam.groovyconsole
 
-import groovy.ui.*
+import groovy.console.ui.*
 
 import groovy.grape.Grape
 import groovy.grape.GrapeIvy

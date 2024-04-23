@@ -34,12 +34,15 @@ package com.kenlam.groovyconsole
 
 import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathEntry
 import com.kenlam.groovyconsole.projects.xmlconfig.ProjectClassPathSettings
-import groovy.ui.*
+import groovy.console.ui.*
 
-import groovy.inspect.swingui.ObjectBrowser
-import groovy.inspect.swingui.AstBrowser
+import groovy.console.ui.ObjectBrowser
+import groovy.console.ui.AstBrowser
+import groovy.console.ui.ConsoleTextEditor
+import groovy.console.ui.HistoryRecord
+import groovy.console.ui.OutputTransforms
 import groovy.swing.SwingBuilder
-import groovy.ui.text.FindReplaceUtility
+import groovy.console.ui.text.FindReplaceUtility
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOCase
 import org.apache.commons.io.filefilter.DirectoryFileFilter
@@ -97,9 +100,9 @@ import com.kenlam.groovyconsole.projects.xmlconfig.InteractionModuleConfig
 import com.kenlam.groovyconsole.projects.ProjectClassPathsManager
 import com.kenlam.common.io.FileUtil
 
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.Marshaller
-import javax.xml.bind.Unmarshaller
+import jakarta.xml.bind.JAXBContext
+import jakarta.xml.bind.Marshaller
+import jakarta.xml.bind.Unmarshaller
 
 import static com.kenlam.common.SimpleLog.commonLog
 
@@ -227,8 +230,8 @@ class AdvancedGroovyConsole implements CaretListener, HyperlinkListener, Compone
     Closure beforeExecution
     Closure afterExecution
 
-    public static URL ICON_PATH = AdvancedGroovyConsole.class.classLoader.getResource('groovy/ui/ConsoleIcon.png') // used by ObjectBrowser and AST Viewer
-    public static URL NODE_ICON_PATH = AdvancedGroovyConsole.class.classLoader.getResource('groovy/ui/icons/bullet_green.png') // used by AST Viewer
+    public static URL ICON_PATH = AdvancedGroovyConsole.class.classLoader.getResource('groovy/console/ui/ConsoleIcon.png') // used by ObjectBrowser and AST Viewer
+    public static URL NODE_ICON_PATH = AdvancedGroovyConsole.class.classLoader.getResource('groovy/console/ui/icons/bullet_green.png') // used by AST Viewer
 
     static groovyFileFilter = new GroovyFileFilter()
     boolean scriptRunning = false
@@ -371,7 +374,7 @@ options:
                 frame(
                         title: 'GroovyConsole',
                         //location: [100,100], // in groovy 2.0 use platform default location
-                        iconImage: imageIcon('/groovy/ui/ConsoleIcon.png').image,
+                        iconImage: imageIcon('/groovy/console/ui/ConsoleIcon.png').image,
                         defaultCloseOperation: JFrame.DO_NOTHING_ON_CLOSE,
                 ) {
                     try {

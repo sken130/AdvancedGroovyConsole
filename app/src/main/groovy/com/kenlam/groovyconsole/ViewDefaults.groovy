@@ -32,16 +32,16 @@
  */
 package com.kenlam.groovyconsole
 
-import groovy.ui.text.GroovyFilter
+import groovy.console.ui.text.GroovyFilter
 import java.awt.Color
 import javax.swing.text.StyleConstants
 import javax.swing.text.StyleContext
 import java.util.prefs.Preferences
 
 menuBarClass     = AdvancedGroovyConsoleMenuBar
-contentPaneClass = groovy.ui.view.BasicContentPane
-// toolBarClass     = groovy.ui.view.BasicToolBar
-// statusBarClass   = groovy.ui.view.BasicStatusBar
+contentPaneClass = groovy.console.ui.view.BasicContentPane
+// toolBarClass     = groovy.console.ui.view.BasicToolBar
+// statusBarClass   = groovy.console.ui.view.BasicStatusBar
 
 def prefs = Preferences.userNodeForPackage(AdvancedGroovyConsole)
 def fontFamily = prefs.get("fontName", "Monospaced")
