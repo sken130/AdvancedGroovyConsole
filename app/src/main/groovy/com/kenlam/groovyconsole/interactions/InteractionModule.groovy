@@ -22,6 +22,7 @@ import com.kenlam.groovyconsole.interactions.utils.SnippetUtils
 import java.awt.Component
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
+import java.awt.EventQueue
 import javax.swing.JMenuItem
 
 public abstract class InteractionModule {
@@ -39,6 +40,9 @@ public abstract class InteractionModule {
 		if (this.builtUI) {
 			throw new IllegalStateException("UI already built for ${this}")
 		}
+        if (!EventQueue.isDispatchThread()) {
+            throw new IllegalStateException("buildUI() must be called on the EDT")
+        }
 		this.builtUI = doBuildUI(console)
 		return this.builtUI
 	}
