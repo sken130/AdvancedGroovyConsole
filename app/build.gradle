@@ -36,7 +36,7 @@ java {
 dependencies {
     // Use the latest Groovy version for building this library
     // implementation 'org.codehaus.groovy:groovy-all:3.0.7'
-    implementation 'org.apache.groovy:groovy-all:4.0.21'
+    implementation 'org.apache.groovy:groovy-all:4.0.24'
 
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
     // implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
