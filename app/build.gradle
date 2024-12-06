@@ -26,6 +26,13 @@ repositories {
 //   }
 // }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)  // Force to build and run this project with Java 21
+        // vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
 dependencies {
     // Use the latest Groovy version for building this library
     // implementation 'org.codehaus.groovy:groovy-all:3.0.7'
